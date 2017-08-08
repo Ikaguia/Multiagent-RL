@@ -142,6 +142,97 @@ class SeekerGhostAgent(GhostAgent):
             return Directions.STOP
 
 
+class FleetPacmanAgent(PacmanAgent):
+    """Pacman that run away from ghosts and get food.
+
+    Attributes:
+        agent_id: The identifier of an agent.
+        ally_ids: The identifier of all allies agents.
+        enemy_ids: The identifier of all enemies agents.
+    """
+
+    def __init__(self, agent_id, ally_ids, enemy_ids):
+        """Extend the constructor from the PacmanAgent superclass.
+
+        Args:
+            agent_id: The identifier of an agent.
+            ally_ids: The identifier of all allies agents.
+            enemy_ids: The identifier of all enemies agents.
+        """
+        super(FleetPacmanAgent, self).__init__(agent_id, ally_ids, enemy_ids)
+        self.eat_behavior = behaviors.EatBehavior()
+
+    def choose_action(self, state, action, reward, legal_actions, test):
+        """Choose the best action.
+
+        Args:
+            state: Current game state.
+            action: Last executed action.
+            reward: Reward for the previous action.
+            legal_actions: List of currently allowed actions.
+            test: Boolean whether agent is allowed to explore.
+        """
+        agent_map = state.get_map()
+        (x, y) = state.get_position()
+
+        nearby_enemies = []
+        enemies_locations = []
+        fragile_enemies_position = []
+
+        for p in state.enemy_ids:
+            q = state.get_agent_position(p)
+            enemies_locations.append(q)
+            if state.get_fragile_agent(p):
+                fragile_enemies_position.append(q)
+                FragileFlag = True
+            else:
+                FragileFlag = False
+
+        for enemy_position in enemies_locations:
+            distance = state.calculate_distance((x, y), enemy_position)
+            if distance < 4:
+                nearby_enemies.append(enemy_position)
+
+        if len(nearby_enemies) == 0:
+            suggested_action = self.eat_behavior(state, legal_actions)
+            if suggested_action in legal_actions:
+                return suggested_action
+            elif legal_actions == []:
+                return Directions.STOP
+            else:
+                return random.choice(legal_actions)
+
+        elif FragileFlag is True:
+            min_distance = float('inf')
+            best_action = None
+            for enemie in fragile_enemies_position:
+                for actions in legal_actions:
+                    diff = agent_map.action_to_pos[actions]
+                    new_position = (diff[0]+x, diff[1]+y)
+                    new_distance = state.calculate_distance(new_position,
+                                                            enemie)
+                    if(new_distance < min_distance):
+                        min_distance = new_distance
+                        best_action = action
+            if(best_action is not None):
+                return best_action
+
+        else:
+            max_distance = (-1)*float('inf')
+            best_action = None
+            for actions in legal_actions:
+                new_distance = 0
+                for enemie in nearby_enemies:
+                    diff = agent_map.action_to_pos[actions]
+                    new_position = (diff[0]+x, diff[1]+y)
+                    new_distance += state.calculate_distance(new_position,
+                                                             enemie)
+                if new_distance > max_distance:
+                    max_distance = new_distance
+                    best_action = actions
+            return best_action
+
+
 class EaterPacmanAgent(PacmanAgent):
     def __init__(self, agent_id, ally_ids, enemy_ids):
         super(EaterPacmanAgent, self).__init__(agent_id)
