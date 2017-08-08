@@ -107,7 +107,6 @@ class RandomPacmanAgentTwo(PacmanAgent):
             else:
                 return self.last_action
 
-
 class RandomGhostAgent(GhostAgent):
     """Agent that randomly selects an action."""
     def __init__(self, agent_id, ally_ids, enemy_ids):
