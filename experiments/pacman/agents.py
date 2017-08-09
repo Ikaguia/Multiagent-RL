@@ -159,10 +159,13 @@ class FleetPacmanAgent(PacmanAgent):
             ally_ids: The identifier of all allies agents.
             enemy_ids: The identifier of all enemies agents.
         """
-        super(FleetPacmanAgent, self).__init__(agent_id, ally_ids, enemy_ids)
+        super(FleetPacmanAgent, self).__init__(agent_id)
         self.eat_behavior = behaviors.EatBehavior()
 
-    def choose_action(self, state, action, reward, legal_actions, test):
+    def learn(self, state, action, reward):
+        pass
+
+    def act(self, state, legal_actions, explore):
         """Choose the best action.
 
         Args:
@@ -213,7 +216,7 @@ class FleetPacmanAgent(PacmanAgent):
                                                             enemie)
                     if(new_distance < min_distance):
                         min_distance = new_distance
-                        best_action = action
+                        best_action = actions
             if(best_action is not None):
                 return best_action
 
