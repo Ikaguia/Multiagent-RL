@@ -142,6 +142,90 @@ class SeekerGhostAgent(GhostAgent):
             return Directions.STOP
 
 
+class BFSPacmanAgent(PacmanAgent):
+    """Agent that search for the shortest food using BFS algorithm."""
+    def __init__(self, agent_id, ally_ids, enemy_ids):
+        super(BFSPacmanAgent, self).__init__(agent_id)
+
+    def learn(self, state, action, reward):
+        pass
+
+    def act(self, state, legal_actions, explore):
+        """Choose the action that brigs Pacman to the neartest food.
+        Args:
+            state: Current game state.
+            action: Last executed action.
+            reward: Reward for the previous action.
+            legal_actions: List of currently allowed actions.
+            explore: Boolean whether agent is allowed to explore.
+        Returns:
+            Sugested action
+        """
+        queue = Queue.Queue()
+        visited = []
+
+        initial_position = state.get_position()
+
+        food_map = state.food_map
+
+        agent_map = state.get_map()
+
+        queue.put(initial_position)
+        visited.append(initial_position)
+
+        closest_food = None
+        while not queue.empty():
+
+            if(closest_food is not None):
+                break
+
+            current_edge = queue.get()
+            (k, l) = current_edge
+
+            random.shuffle(PACMAN_ACTIONS)
+            for actions in PACMAN_ACTIONS:
+
+                diff = agent_map.action_to_pos[actions]
+                new_edge = (k + diff[0],
+                            l + diff[1])
+
+                if agent_map._is_valid_position(new_edge):
+                    if new_edge not in visited:
+                        (i, j) = new_edge
+                        if food_map[i][j] > 0.0:
+                            if closest_food is None:
+                                closest_food = new_edge
+                        else:
+                            queue.put(new_edge)
+                            visited.append(new_edge)
+
+        if closest_food is None:
+            return Directions.STOP
+
+            return random.choice(legal_actions)
+
+        best_action = None
+        min_dist = float('inf')
+
+        (f, p) = (0, 0)
+
+        for actions in legal_actions:
+
+            diff = agent_map.action_to_pos[actions]
+            new_edge = (initial_position[0] + diff[0],
+                        initial_position[1] + diff[1])
+
+            new_dist = state.calculate_distance(new_edge, closest_food)
+
+            if new_dist <= min_dist:
+                min_dist = new_dist
+                best_action = actions
+                (f, p) = new_edge
+
+        food_map[f][p] = 0.0
+        return best_action
+
+
 class FleetPacmanAgent(PacmanAgent):
     """Pacman that run away from ghosts and get food.
 
