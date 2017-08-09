@@ -452,9 +452,10 @@ def build_parser():
                        choices=['random', 'seeker'], default='random',
                        help='select ghost agent')
     group.add_argument('--pacman-agent', dest='pacman_agent', type=str,
-                       choices=['random', 'random2', 'ai', 'eater',
-                                'qlearning', 'sarsa', 'behaviorrandom',
-                                'behaviorqlearning', 'bayesian', 'fleet'],
+                       choices=['ai', 'bayesian',
+                                'behaviorqlearning', 'behaviorrandom',
+                                'bfs', 'eater', 'fleet', 'qlearning',
+                                'random', 'random2', 'sarsa'],
                        default='random',
                        help='select Pac-Man agent')
     group.add_argument('--layout', dest='layout', type=str,

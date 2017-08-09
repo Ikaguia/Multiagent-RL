@@ -6,6 +6,7 @@ from __future__ import absolute_import
 
 import logging
 import random
+import Queue
 
 from .berkeley.game import Agent as BerkeleyGameAgent, Directions
 
