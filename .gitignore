@@ -4,4 +4,7 @@
 *results.txt
 *.pol
 
+#Mac_OS
+.DS_Store
+
 wiki/*
