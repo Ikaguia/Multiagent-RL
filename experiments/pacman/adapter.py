@@ -33,7 +33,7 @@ logger = logging.getLogger(__name__)
 class BerkeleyAdapter(core.BaseExperiment):
     def __init__(self, pacman_agent, ghost_agent, num_ghosts, noise, max_steps,
                  policy_file, layout_map, learn_games, test_games, output_file,
-                 graphics):
+                 graphics, comm):
 
         super(BerkeleyAdapter, self).__init__()
 
@@ -475,6 +475,10 @@ def build_parser():
     group.add_argument('--policy-file', dest='policy_file',
                        type=lambda s: unicode(s, 'utf8'),
                        help='load and save Pac-Man policy from the given file')
+    group.add_argument('--comm', dest='comm', type=str,
+                       choices=['none', 'pm', 'sharedReward', 'both', 'mse'],
+                       default='none',
+                       help='Type of agent communication')
 
     return parser
 
@@ -491,7 +495,8 @@ def build_adapter_with_args(args):
         learn_games=args.learn_games,
         test_games=args.test_games,
         output_file=args.output_file,
-        graphics=args.graphics)
+        graphics=args.graphics,
+        comm=args.comm)
 
 
 if __name__ == '__main__':

@@ -13,6 +13,8 @@ ACTION_MSG = 'Action'
 REWARD_MSG = 'Reward'
 POLICY_MSG = 'Policy'
 REQUEST_POLICY_MSG = 'RequestPolicy'
+REQUEST_SHARED_REWARD_MSG = 'RequestSharedReward'
+SHARED_REWARD_MSG = 'SharedReward'
 
 
 class BaseMessage(object):
@@ -106,3 +108,48 @@ class RequestPolicyMessage(BaseMessage):
     def __init__(self, agent_id):
         super(RequestPolicyMessage, self).__init__(
             type=REQUEST_POLICY_MSG, agent_id=agent_id)
+
+
+class SharedRewardMessage(BaseMessage):
+    """Base Message for the Behavior communication.
+    Attributes:
+        agent_id: The identifier of the agent.
+        goal: A int value that determine wheater the agent is Seeking, Pursuing
+            or Fleeing.
+    """
+
+    def __init__(self, agent_id=None, previous_behavior=None,
+                 reward=None, state=None):
+        """Constructor for the GoalMessage class.
+        Args:
+            agent_id: The identifier of the agent.
+            goal: A int value that determine wheater the agent is Seeking,
+                Pursuing or Fleeing.
+        """
+        super(SharedRewardMessage, self).__init__(msg_type=SHARED_REWARD_MSG)
+        self.agent_id = agent_id
+        self.previous_behavior = previous_behavior
+        self.reward = reward
+        self.state = state
+
+
+class RequestSharedRewardMessage(BaseMessage):
+    """Base Request Message for the Behavior communication.
+    Attributes:
+        agent_id: The identifier of the agent.
+        goal: A int value that determine wheater the agent is Seeking, Pursuing
+            or Fleeing.
+    """
+
+    def __init__(self, agent_id=None, reward=None):
+        """Constructor for the GoalMessage class.
+        Args:
+            agent_id: The identifier of the agent.
+            goal: A int value that determine wheater the agent is Seeking,
+                Pursuing or Fleeing.
+        """
+        super(RequestSharedRewardMessage,
+              self).__init__(msg_type=REQUEST_SHARED_REWARD_MSG)
+
+        self.agent_id = agent_id
+        self.reward = reward

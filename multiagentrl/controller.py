@@ -56,6 +56,10 @@ class Controller(core.BaseController):
             reply_msg = self._send_policy_request(msg)
         elif msg.type == messages.POLICY_MSG:
             reply_msg = self._set_agent_policy(msg)
+        elif msg.type == messages.REQUEST_SHARED_REWARD_MSG:
+            reply_msg = self.__request_shared_reward__(msg)
+        elif msg.type == messages.SHARED_REWARD_MSG:
+            reply_msg = self.__shared_reward__(msg)
         else:
             raise ValueError('Unknown message type "{}"'.format(msg.type))
 
@@ -118,6 +122,66 @@ class Controller(core.BaseController):
         logger.debug('#{} Receiving reward'.format(msg.agent_id))
         self.agents[msg.agent_id].learn(msg.state, msg.action, msg.reward)
         return messages.AcknowledgementMessage()
+
+
+    def _request_shared_reward(self, msg):
+        """Request the goal.
+        Args:
+            msg:  A message of type GOAL_MSG
+        """
+        ident = msg.agent_id
+        pb = self.agents[ident].previous_behavior
+        reward = msg.reward
+        state = self.game_states[ident]
+
+        reply_msg = comm.SharedLearnMessage(agent_id=ident,
+                                            previous_behavior=pb,
+                                            reward=reward, state=state)
+
+        self.server.send(reply_msg)
+
+    def _shared_reward(self, msg):
+        """Set the agent new goal.
+        Args:
+            msg: A message of type GOAL_MSG
+        """
+        if (self.game_states[msg.agent_id].iteration % 5) == 0:
+            self.ghostId.append(msg.agent_id)
+            ps = self.agents[msg.agent_id].learning.previous_state
+            self.learnTripples.append((msg.agent_id, ps, msg.state,
+                                       msg.previous_behavior,
+                                       msg.reward))
+
+            num = len(self.__get_allies__(msg.agent_id))
+            if len(self.learnTripples) == num:
+                for agent in self.ghostId:
+                    for tripple in self.learnTripples:
+                        if agent != tripple[0]:
+                            ps = tripple[1]
+                            state = tripple[2]
+                            pb = tripple[3]
+                            reward = tripple[4]
+                            # print "\nAgent receiving info: {}".format(agent)
+                            # print "Information Recived from agent: {}"
+                            # .format(tripple[0])
+                            # print "Previous State: {}"
+                            # .format(tripple[1].get_position())
+                            # print "State: {}"
+                            # .format(tripple[2].get_position())
+                            # print "Behavior: {}".format(tripple[3])
+                            # print "Reward: {}".format(tripple[4])
+                            self.agents[agent].learning.learnFromOther(state,
+                                                                       ps, pb,
+                                                                       reward)
+
+                self.ghostId = []
+                self.learnTripples = []
+
+                self.server.send(comm.AckMessage())
+            else:
+                self.server.send(comm.AckMessage())
+        else:
+            self.server.send(comm.AckMessage())
 
     def _send_policy_request(self, msg):
         logger.debug('#{} Sending policy'.format(msg.agent_id))
