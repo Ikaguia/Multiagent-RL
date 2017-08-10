@@ -53,4 +53,4 @@ All documentation are kept in [our wiki](https://github.com/matheusportela/Multi
 
 * Undergraduate thesis: [PORTELA, M.V. - Behavior selection for multiple autonomous agents with reinforcement learning in stochastic environments - University of Brasilia - Brasilia, Brazil - 2015](https://db.tt/TIvw9aXx)
 * Conference paper: [PORTELA, M. V., RAMOS, G. N. - State estimation and reinforcement learning for behavior selection in stochastic multiagent systems - Proceedings of SBGames 2015 - Teresina, Brazil - 2015](http://www.sbgames.org/sbgames2015/anaispdf/computacao-short/147936.pdf)
-* Scientific Initiation Report: [NOBRE, R. A., RAMOS, G. N. - Implementação de Comunicação entre Agentes Autônomos para Aprendizagem de Comportamentos Colaborativos]()
+* Scientific Initiation Report: [NOBRE, R. A., RAMOS, G. N. - Implementação de Comunicação entre Agentes Autônomos para Aprendizagem de Comportamentos Colaborativos](https://github.com/Skalwalker/MRLCommunication/blob/master/agents%20comunications%20report.pdf)
