@@ -96,40 +96,6 @@ class RandomPacmanAgentTwo(PacmanAgent):
             else:
                 return self.last_action
 
-class RandomGhostAgent(GhostAgent):
-    """Agent that randomly selects an action."""
-    def __init__(self, agent_id, ally_ids, enemy_ids):
-        super(RandomGhostAgent, self).__init__(agent_id)
-
-    def learn(self, state, action, reward):
-        pass
-
-    def act(self, state, legal_actions, explore):
-        if legal_actions:
-            return random.choice(legal_actions)
-        else:
-            return Directions.STOP
-
-
-class SeekerGhostAgent(GhostAgent):
-    """Agent that randomly selects an action."""
-    def __init__(self, agent_id, ally_ids, enemy_ids):
-        super(SeekerGhostAgent, self).__init__(agent_id)
-        self.behavior = behaviors.SeekBehavior()
-
-    def learn(self, state, action, reward):
-        pass
-
-    def act(self, state, legal_actions, explore):
-        action = self.behavior(state, legal_actions)
-
-        if action in legal_actions:
-            return action
-        elif legal_actions:
-            return random.choice(legal_actions)
-        else:
-            return Directions.STOP
-
 
 class BFSPacmanAgent(PacmanAgent):
     """Agent that search for the shortest food using BFS algorithm."""
