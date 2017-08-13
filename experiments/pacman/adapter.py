@@ -55,7 +55,7 @@ class BerkeleyAdapter(core.BaseExperiment):
         # Ghosts
         self.num_ghosts = int(num_ghosts)
         if not (0 <= self.num_ghosts <= 4):
-            raise ValueError('Must 0-4 ghost(s).')
+            raise ValueError('Must have 0-4 ghost(s).')
 
         self.ghosts = []
         for i in range(num_ghosts):
@@ -118,8 +118,8 @@ class BerkeleyAdapter(core.BaseExperiment):
 
         if filename and os.path.isfile(filename):
             logger.info('Loading policies from {}'.format(filename))
-            with open(filename) as f:
-                self.policies = pickle.loads(f.read())
+            with open(filename, 'rb') as f:
+                self.policies = pickle.load(f)
 
     def execute_game(self):
         logger.info('Executing game #{}'.format(self.game_number + 1))
@@ -176,6 +176,26 @@ class BerkeleyAdapter(core.BaseExperiment):
 class BerkeleyAdapterAgent(core.BaseAdapterAgent, BerkeleyGameAgent):
     pacman_index = None
     noise = 0
+
+    pacman_agents = {
+        'random': agents.RandomPacmanAgent,
+        'random2': agents.RandomPacmanAgentTwo,
+        'ai': agents.BehaviorLearningPacmanAgent,
+        'eater': agents.EaterPacmanAgent,
+        'qlearning': agents.QLearningPacmanAgent,
+        'sarsa': agents.SARSALearningPacmanAgent,
+        'behaviorrandom': agents.BehaviorRandomPacmanAgent,
+        'behaviorqlearning': agents.BehaviorQLearningPacmanAgent,
+        'bayesian': agents.BayesianBehaviorQLearningPacmanAgent,
+        'fleet': agents.FleetPacmanAgent,
+        'bfs': agents.BFSPacmanAgent
+    }
+    ghost_agents = {
+        'random': agents.RandomGhostAgent,
+        'seeker': agents.SeekerGhostAgent,
+        'qlearning': agents.QLearningGhostAgent,
+        'sarsa': agents.SARSALearningGhostAgent,
+    }
 
     def __init__(self, agent_id, agent_type, agent_algorithm='random', *args,
                  **kwargs):
@@ -289,41 +309,24 @@ class BerkeleyAdapterAgent(core.BaseAdapterAgent, BerkeleyGameAgent):
             self.communicate(message)
 
     def _register_pacman(self):
-        if self.agent_algorithm == 'random':
-            self.agent_class = agents.RandomPacmanAgent
-        elif self.agent_algorithm == 'random2':
-            self.agent_class = agents.RandomPacmanAgentTwo
-        elif self.agent_algorithm == 'ai':
-            self.agent_class = agents.BehaviorLearningPacmanAgent
-        elif self.agent_algorithm == 'eater':
-            self.agent_class = agents.EaterPacmanAgent
-        elif self.agent_algorithm == 'qlearning':
-            self.agent_class = agents.QLearningPacmanAgent
-        elif self.agent_algorithm == 'sarsa':
-            self.agent_class = agents.SARSALearningPacmanAgent
-        elif self.agent_algorithm == 'behaviorrandom':
-            self.agent_class = agents.BehaviorRandomPacmanAgent
-        elif self.agent_algorithm == 'behaviorqlearning':
-            self.agent_class = agents.BehaviorQLearningPacmanAgent
-        elif self.agent_algorithm == 'bayesian':
-            self.agent_class = agents.BayesianBehaviorQLearningPacmanAgent
-        elif self.agent_algorithm == 'fleet':
-            self.agent_class = agents.FleetPacmanAgent
-        elif self.agent_algorithm == 'bfs':
-            self.agent_class = agents.BFSPacmanAgent
+        if self.agent_algorithm in BerkeleyAdapterAgent.pacman_agents:
+            self.agent_class = BerkeleyAdapterAgent.pacman_agents[
+                self.agent_algorithm
+            ]
         else:
-            raise ValueError('Pac-Man agent must be "ai", "bayesian",'
-                             ' "behaviorqlearning", "behaviorrandom",'
-                             ' "bfs", "eater", "fleet", "qlearning",'
-                             ' "random", "random2" or "sarsa".')
+            raise ValueError('Pac-Man agent must be one of {}.'.format(
+                BerkeleyAdapterAgent.pacman_agents.keys()
+            ))
 
     def _register_ghost(self):
-        if self.agent_algorithm == 'random':
-            self.agent_class = agents.RandomGhostAgent
-        elif self.agent_algorithm == 'seeker':
-            self.agent_class = agents.SeekerGhostAgent
+        if self.agent_algorithm in BerkeleyAdapterAgent.ghost_agents:
+            self.agent_class = BerkeleyAdapterAgent.ghost_agents[
+                self.agent_algorithm
+            ]
         else:
-            raise ValueError('Ghost agent must be "random" or "seeker".')
+            raise ValueError('Ghost agent must be one of {}.'.format(
+                BerkeleyAdapterAgent.ghost_agents.keys()
+            ))
 
     def finish_game(self):
         logger.info('#{} Finishing game'.format(self.agent_id))
@@ -449,13 +452,11 @@ def build_parser():
                        default=100,
                        help='number of games to learn from')
     group.add_argument('--ghost-agent', dest='ghost_agent', type=str,
-                       choices=['random', 'seeker'], default='random',
+                       choices=BerkeleyAdapterAgent.ghost_agents.keys(),
+                       default='random',
                        help='select ghost agent')
     group.add_argument('--pacman-agent', dest='pacman_agent', type=str,
-                       choices=['ai', 'bayesian',
-                                'behaviorqlearning', 'behaviorrandom',
-                                'bfs', 'eater', 'fleet', 'qlearning',
-                                'random', 'random2', 'sarsa'],
+                       choices=BerkeleyAdapterAgent.pacman_agents.keys(),
                        default='random',
                        help='select Pac-Man agent')
     group.add_argument('--layout', dest='layout', type=str,
@@ -473,7 +474,7 @@ def build_parser():
                        default=3,
                        help='number of ghosts in game')
     group.add_argument('--policy-file', dest='policy_file',
-                       type=lambda s: unicode(s, 'utf8'),
+                       type=str,
                        help='load and save Pac-Man policy from the given file')
     group.add_argument('--comm', dest='comm', type=str,
                        choices=['none', 'pm', 'sharedReward', 'both', 'mse'],

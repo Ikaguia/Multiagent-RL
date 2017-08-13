@@ -42,18 +42,6 @@ class PacmanAgent(core.BaseControllerAgent):
         pass
 
 
-class GhostAgent(core.BaseControllerAgent):
-    def __init__(self, agent_id):
-        assert agent_id != PACMAN_INDEX
-        super(GhostAgent, self).__init__(agent_id)
-
-    def start_game(self):
-        pass
-
-    def finish_game(self):
-        pass
-
-
 class RandomPacmanAgent(PacmanAgent):
     """Agent that randomly selects an action."""
     def __init__(self, agent_id, ally_ids, enemy_ids):
@@ -436,19 +424,38 @@ class BehaviorLearningPacmanAgent(TDLearningPacmanAgent):
         self.previous_behavior = None
         self.K = 1.0  # Learning rate
 
+        self.samples = []
+        self.minibatch_size = 3
+        self.min_samples = 10
+
     def learn(self, state, action, reward):
-        self.agent_state = self._get_state(state)
+        self.agent_state = state
 
         if self.previous_behavior:
             self.learning.learning_rate = self.K / (self.K + self.game_step)
             self.learning.learn(self.agent_state, self.previous_behavior,
                                 reward)
 
+    def learn_with_experience_replay(self, state, action, reward):
+        if self.previous_behavior:
+            self.samples.append([state, self.previous_behavior, reward])
+
+        if len(self.samples) >= self.min_samples:
+            self.experience_replay()
+            self.samples = []
+
+    def experience_replay(self):
+        self.learning.learning_rate = self.K / (self.K + self.game_step)
+        minibatch = random.sample(self.samples, self.minibatch_size)
+        for sample in minibatch:
+            print(sample)
+            self.learning.learn(sample[0], sample[1], sample[2])
+
     def act(self, state, legal_actions, explore):
         if not legal_actions:
             return Directions.STOP
 
-        self.agent_state = self._get_state(state)
+        self.agent_state = state
 
         # Select a new behavior every `num_behavior_steps` steps.
         if (self.previous_behavior is None or
@@ -532,3 +539,137 @@ class BayesianBehaviorQLearningPacmanAgent(BehaviorLearningPacmanAgent):
                 ]),
             exploration.EGreedy(exploration_rate=0.1))
         self.learning.features = self.features
+
+    def get_policy(self):
+        return self.learning.weights
+
+    def set_policy(self, weights):
+        self.learning.weights = weights
+
+
+class GhostAgent(core.BaseControllerAgent):
+    def __init__(self, agent_id):
+        assert agent_id != PACMAN_INDEX
+        super(GhostAgent, self).__init__(agent_id)
+
+    def start_game(self):
+        pass
+
+    def finish_game(self):
+        pass
+
+
+class RandomGhostAgent(GhostAgent):
+    """Agent that randomly selects an action."""
+    def __init__(self, agent_id, ally_ids, enemy_ids):
+        super(RandomGhostAgent, self).__init__(agent_id)
+
+    def learn(self, state, action, reward):
+        pass
+
+    def act(self, state, legal_actions, explore):
+        if legal_actions:
+            return random.choice(legal_actions)
+        else:
+            return Directions.STOP
+
+
+class SeekerGhostAgent(GhostAgent):
+    """Agent that randomly selects an action."""
+    def __init__(self, agent_id, ally_ids, enemy_ids):
+        super(SeekerGhostAgent, self).__init__(agent_id)
+        self.behavior = behaviors.SeekBehavior()
+
+    def learn(self, state, action, reward):
+        pass
+
+    def act(self, state, legal_actions, explore):
+        action = self.behavior(state, legal_actions)
+
+        if action in legal_actions:
+            return action
+        elif legal_actions:
+            return random.choice(legal_actions)
+        else:
+            return Directions.STOP
+
+
+class TDLearningGhostAgent(GhostAgent):
+    def __init__(self, agent_id, ally_ids, enemy_ids, learning_algorithm,
+                 exploration_algorithm):
+        super(TDLearningGhostAgent, self).__init__(agent_id)
+        self.game_number = 1
+        self.game_step = 1
+        self.exploration_rate = 0.1
+
+        self.features = [
+            features.EnemyDistanceFeature(0),
+            features.FragileAgentFeature(agent_id)
+        ]
+
+        self.learning = learning_algorithm
+        self.exploration = exploration_algorithm
+        self.agent_state = None
+
+    def get_policy(self):
+        return self.learning.q_values
+
+    def set_policy(self, weights):
+        self.learning.q_values = weights
+
+    def start_game(self):
+        self.game_step = 1
+
+    def finish_game(self):
+        self.game_number += 1
+
+    def _get_state(self, state):
+        if not self.agent_state:
+            self.agent_state = tuple([
+                feature(state) for feature in self.features])
+        return self.agent_state
+
+    def learn(self, state, action, reward):
+        self.agent_state = self._get_state(state)
+        self.learning.learn(self.agent_state, action, reward)
+
+    def act(self, state, legal_actions, explore):
+        if not legal_actions:
+            return Directions.STOP
+
+        self.agent_state = self._get_state(state)
+        action = self.learning.act(self.agent_state)
+
+        if explore and legal_actions:
+            action = self.exploration.explore(action, legal_actions)
+
+        self.game_step += 1
+
+        # Reset agent state
+        self.agent_state = None
+
+        return self._select_valid_action(action, legal_actions)
+
+    def _select_valid_action(self, action, legal_actions):
+        if action in legal_actions:
+            return action
+        else:
+            return random.choice(legal_actions)
+
+
+class QLearningGhostAgent(TDLearningGhostAgent):
+    def __init__(self, agent_id, ally_ids, enemy_ids):
+        super(QLearningGhostAgent, self).__init__(
+            agent_id, ally_ids, enemy_ids,
+            learning.QLearning(learning_rate=0.3, discount_factor=0.7,
+                               actions=GHOST_ACTIONS),
+            exploration.EGreedy(exploration_rate=0.1))
+
+
+class SARSALearningGhostAgent(TDLearningGhostAgent):
+    def __init__(self, agent_id, ally_ids, enemy_ids):
+        super(SARSALearningGhostAgent, self).__init__(
+            agent_id, ally_ids, enemy_ids,
+            learning.SARSALearning(learning_rate=0.5, discount_factor=0.9,
+                                   actions=GHOST_ACTIONS),
+            exploration.EGreedy(exploration_rate=0.1))
