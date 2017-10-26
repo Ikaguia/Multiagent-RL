@@ -17,7 +17,7 @@ from communication import (TCPClient, TCPServer, DEFAULT_CLIENT_ADDRESS,
 
 __author__ = "Matheus Portela and Guilherme N. Ramos"
 __credits__ = ["Matheus Portela", "Guilherme N. Ramos", "Renato Nobre",
-               "Pedro Saman"]
+               "Pedro Saman", "Cristiano K. Brust"]
 __maintainer__ = "Guilherme N. Ramos"
 __email__ = "gnramos@unb.br"
 
@@ -44,7 +44,7 @@ def get_Adapter():
 
     group = parser.add_argument_group('Experimental Setup')
     group.add_argument('--ghost-agent', dest='ghost_agent', type=str,
-                       choices=['random', 'ai'], default=DEFAULT_GHOST_AGENT,
+                       choices=['random', 'ai', 'fixedFlee', 'fixedSeek', 'fixedPursue'], default=DEFAULT_GHOST_AGENT,
                        help='select ghost agent')
     group.add_argument('-l', '--learn-num', dest='learn_runs', type=int,
                        default=DEFAULT_NUMBER_OF_LEARNING_RUNS,

@@ -1,0 +1,11 @@
+[Controller] Ready
+[Controller] Now running
+[Controller] Registered pacman #0 (BFS_PacmanAgent)
+[Controller] Registered ghost #1 (FixedFleeGhostAgent)
+[Controller] Registered ghost #2 (FixedFleeGhostAgent)
+[Controller] Initialized pacman #0
+[Controller] Initialized ghost #1
+[Controller] Initialized ghost #2
+[Controller] Start game for pacman #0
+[Controller] Start game for ghost #1
+[Controller] Start game for ghost #2

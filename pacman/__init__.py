@@ -36,6 +36,6 @@ The plot file makes some graphs of the simulation results.
 
 __author__ = "Matheus Portela and Guilherme N. Ramos"
 __credits__ = ["Matheus Portela", "Guilherme N. Ramos", "Renato Nobre",
-               "Pedro Saman"]
+               "Pedro Saman", "Cristiano K. Brust"]
 __maintainer__ = "Guilherme N. Ramos"
 __email__ = "gnramos@unb.br"
