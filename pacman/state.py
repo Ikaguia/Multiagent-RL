@@ -447,6 +447,10 @@ class GameState(object):
 		for id_ in [self.agent_id] + self.ally_ids + self.enemy_ids:
 			self.fragile_agents[id_] = 0.5
 
+		self.prev_behavior = {}
+		for id_ in self.ally_ids:
+			self.prev_behavior[id_] = 0
+
 		self.eater = eater
 		self.iteration = iteration
 		self.food_map = None
@@ -554,6 +558,15 @@ class GameState(object):
 			status: The status of the fragile agent.
 		"""
 		self.fragile_agents[agent_id] = status
+
+	def observe_prev_behavior(self, agent_id, behavior):
+		"""Set prev_behavior for agent_id.
+
+		Args:
+			agent_id: The identifier of the agent.
+			behavior: The previous behavior of the agent.
+		"""
+		self.prev_behavior[agent_id] = behavior
 
 	def get_agent_position(self, agent_id):
 		"""Get the agent position with maximum probability.
@@ -716,6 +729,17 @@ class GameState(object):
 				closest_enemy = enemy_id
 
 		return closest_enemy
+
+	def get_agent_prev_behavior(self, agent_id):
+		"""Get the previous behavior of the agent.
+
+		Args:
+			The id of an agent
+		Returns:
+			The previous behavior of the agent.
+		"""
+
+		return self.prev_behavior[agent_id]
 
 
 if __name__ == '__main__':

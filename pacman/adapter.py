@@ -53,13 +53,13 @@ NUMBER_OF_BERKELEY_GAMES = 1
 RECORD_BERKELEY_GAMES = False
 
 
+import sys
+import time;
 def log(msg):
 	"""Print adapter message."""
-	print '[  Adapter ] {}'.format(msg)
-	#test
-	import sys
+	localtime = time.asctime( time.localtime(time.time()) )
+	print localtime,'[  Adapter ] {}'.format(msg)
 	sys.stdout.flush()
-	#test
 
 
 class Adapter(object):
@@ -197,6 +197,8 @@ class Adapter(object):
 			self.ghost_class = agents.RandomGhostAgent
 		elif ghost_agent == 'ai':
 			self.ghost_class = agents.BehaviorLearningGhostAgent
+		elif ghost_agent == 'ai2':
+			self.ghost_class = agents.BehaviorLearningGhostAgentTwo
 		elif ghost_agent == 'fixedFlee':
 			self.ghost_class = agents.FixedFleeGhostAgent
 		elif ghost_agent == 'fixedSeek':
@@ -204,7 +206,7 @@ class Adapter(object):
 		elif ghost_agent == 'fixedPursue':
 			self.ghost_class = agents.FixedPursueGhostAgent
 		else:
-			raise ValueError('Ghost agent must be ai, random, fixedFlee, fixedSeek or fixedPursue.')
+			raise ValueError('Ghost agent must be ai, ai2, random, fixedFlee, fixedSeek or fixedPursue.')
 
 		ghost_name = self.ghost_class.__name__
 		self.ghosts = []

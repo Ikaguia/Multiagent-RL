@@ -81,7 +81,7 @@ class FoodDistanceFeature(Feature):
 
 
 class FragileAgentFeature(Feature):
-    """Get the Fragile Agente for an agent identifier.
+    """Get the Fragile Agent for an agent identifier.
 
     A fragile agent is the when a pacman eat a pill and might be on danger.
     """
@@ -103,6 +103,31 @@ class FragileAgentFeature(Feature):
             state: Agent state.
             action: Action done for the agent state.
         Returns:
-            Fragile Agente for the agent id.
+            Fragile Agent for the agent id.
         """
         return state.get_fragile_agent(self.agent_id)
+
+
+class AllybehaviorFeature(Feature):
+    """Get the previous behavious for an agent identifier."""
+
+    def __init__(self, agent_id):
+        """Constructor method for the AllybehaviorFeature Class.
+
+        Args:
+            agent_id: The identifier of the agent.
+        Attributes:
+            agent_id: The identifier of the agent.
+        """
+        self.agent_id = agent_id
+
+    def __call__(self, state, action):
+        """Method executed when AllybehaviorFeature Class is called.
+
+        Args:
+            state: Agent state.
+            action: Action done for the agent state.
+        Returns:
+            Previous behavior of the agent.
+        """
+        return state.get_agent_prev_behavior(self.agent_id)

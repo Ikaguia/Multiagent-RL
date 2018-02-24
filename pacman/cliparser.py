@@ -44,7 +44,7 @@ def get_Adapter():
 
     group = parser.add_argument_group('Experimental Setup')
     group.add_argument('--ghost-agent', dest='ghost_agent', type=str,
-                       choices=['random', 'ai', 'fixedFlee', 'fixedSeek', 'fixedPursue'], default=DEFAULT_GHOST_AGENT,
+                       choices=['random', 'ai', 'ai2', 'fixedFlee', 'fixedSeek', 'fixedPursue'], default=DEFAULT_GHOST_AGENT,
                        help='select ghost agent')
     group.add_argument('-l', '--learn-num', dest='learn_runs', type=int,
                        default=DEFAULT_NUMBER_OF_LEARNING_RUNS,

@@ -16,21 +16,21 @@ __maintainer__ = "Guilherme N. Ramos"
 __email__ = "gnramos@unb.br"
 
 
+import sys
+import time;
 def log(msg):
 	"""Log on the screen the controller message.
 
 	Args:
 		msg: The message to be logged.
 	"""
-	print '[Controller] {}'.format(msg)
-	#test
-	import sys
+	localtime = time.asctime( time.localtime(time.time()) )
+	print localtime,'[Controller] {}'.format(msg)
 	sys.stdout.flush()
-	#test
 
 
 class Controller(object):
-	"""Menage the messages client/server and server/client for the agents.
+	"""Manage the messages client/server and server/client for the agents.
 
 	Attributes:
 		agents: A dictionary of agents.
@@ -91,6 +91,13 @@ class Controller(object):
 
 		for id_, status in state.fragile_agents.items():
 			self.game_states[state.agent_id].observe_fragile_agent(id_, status)
+
+		for id_ in self.__get_allies__(state.agent_id):
+			if hasattr(self.agents[id_],"previous_behavior_id"):
+				self.game_states[state.agent_id].observe_prev_behavior(id_, self.agents[id_].previous_behavior_id())
+			else:
+				self.game_states[state.agent_id].observe_prev_behavior(id_, -1)
+
 
 		# Choose action
 		agent_state = self.game_states[state.agent_id]
@@ -249,7 +256,7 @@ class Controller(object):
 	def __set_agent_policy__(self, msg):
 		"""Set an agent policy.
 
-		Set the policy for the msg agent id, and sand to the server a simple
+		Set the policy for the msg agent id, and send to the server a simple
 		acknowledgment message.
 
 		Args:
