@@ -6,7 +6,8 @@
 
 from argparse import ArgumentParser
 
-from adapter import (Adapter, DEFAULT_GHOST_AGENT, DEFAULT_LAYOUT,
+from adapter import (Adapter, DEFAULT_LAYOUT,
+                     DEFAULT_GHOST_AGENT, DEFAULT_GHOST_AGENT2, DEFAULT_GHOST_AGENT3, DEFAULT_GHOST_AGENT4,
                      DEFAULT_NUMBER_OF_GHOSTS, DEFAULT_NUMBER_OF_LEARNING_RUNS,
                      DEFAULT_NUMBER_OF_TEST_RUNS, DEFAULT_OUTPUT_FILE,
                      DEFAULT_PACMAN_AGENT, DEFAULT_COMM, DEFAULT_MSE)
@@ -43,9 +44,19 @@ def get_Adapter():
                         help='results output file')
 
     group = parser.add_argument_group('Experimental Setup')
+    ghost_ai_choices = ['random', 'ai', 'ai2', 'fixedFlee', 'fixedSeek', 'fixedPursue']
     group.add_argument('--ghost-agent', dest='ghost_agent', type=str,
-                       choices=['random', 'ai', 'ai2', 'fixedFlee', 'fixedSeek', 'fixedPursue'], default=DEFAULT_GHOST_AGENT,
+                       choices=ghost_ai_choices, default=DEFAULT_GHOST_AGENT,
                        help='select ghost agent')
+    group.add_argument('--ghost-agent2', dest='ghost_agent2', type=str,
+                       choices=ghost_ai_choices + ['a1'], default=DEFAULT_GHOST_AGENT2,
+                       help='select ghost agent for agent 2')
+    group.add_argument('--ghost-agent3', dest='ghost_agent3', type=str,
+                       choices=ghost_ai_choices + ['a1'], default=DEFAULT_GHOST_AGENT3,
+                       help='select ghost agent for agent 3')
+    group.add_argument('--ghost-agent4', dest='ghost_agent4', type=str,
+                       choices=ghost_ai_choices + ['a1'], default=DEFAULT_GHOST_AGENT4,
+                       help='select ghost agent for agent 4')
     group.add_argument('-l', '--learn-num', dest='learn_runs', type=int,
                        default=DEFAULT_NUMBER_OF_LEARNING_RUNS,
                        help='number of games to learn from')
@@ -96,6 +107,9 @@ def get_Adapter():
 
     adapter = Adapter(pacman_agent=args.pacman_agent,
                       ghost_agent=args.ghost_agent,
+                      ghost_agent2=args.ghost_agent2,
+                      ghost_agent3=args.ghost_agent3,
+                      ghost_agent4=args.ghost_agent4,
                       num_ghosts=args.num_ghosts,
                       noise=args.noise,
                       policy_file=args.policy_file,

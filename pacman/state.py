@@ -449,7 +449,7 @@ class GameState(object):
 
 		self.prev_behavior = {}
 		for id_ in self.ally_ids:
-			self.prev_behavior[id_] = 0
+			self.prev_behavior[id_] = None
 
 		self.eater = eater
 		self.iteration = iteration

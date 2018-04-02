@@ -93,10 +93,10 @@ class Controller(object):
 			self.game_states[state.agent_id].observe_fragile_agent(id_, status)
 
 		for id_ in self.__get_allies__(state.agent_id):
-			if hasattr(self.agents[id_],"previous_behavior_id"):
-				self.game_states[state.agent_id].observe_prev_behavior(id_, self.agents[id_].previous_behavior_id())
+			if hasattr(self.agents[id_],"previous_behavior"):
+				self.game_states[state.agent_id].observe_prev_behavior(id_, self.agents[id_].previous_behavior)
 			else:
-				self.game_states[state.agent_id].observe_prev_behavior(id_, -1)
+				self.game_states[state.agent_id].observe_prev_behavior(id_, None)
 
 
 		# Choose action

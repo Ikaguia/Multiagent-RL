@@ -960,30 +960,33 @@ class BehaviorLearningGhostAgent(GhostAgent):
 		test_mode: Set test mode to 'False'.
 	"""
 
-	def __init__(self, agent_id, ally_ids, enemy_ids):
-		"""Constructor for the BehaviorLearningGhostAgent.
+	def __init__(self, agent_id, ally_ids, enemy_ids,
+		behaviors_list=[behaviors.FleeBehavior(),behaviors.SeekBehavior(),behaviors.PursueBehavior()],
+		feature_list=[]):
 
-		Extend the GhostAgent constructor.
+		"""
+			Constructor for the BehaviorLearningGhostAgent.
 
-		Setup the features the ghosts will use, the behaviors, the explotation
-		and exploration rate, initialize a QLearningWithApproximation object
-		initialize behavior count and set test mode to 'False'.
-		Args:
-			agent_id: The identifier of the agent.
-			ally_ids: The identifiers of all the allies.
-			enemy_ids: The identifiers of all the enemies.
+			Extend the GhostAgent constructor.
+
+			Setup the features the ghosts will use, the behaviors, the explotation
+			and exploration rate, initialize a QLearningWithApproximation object
+			initialize behavior count and set test mode to 'False'.
+			Args:
+				agent_id: The identifier of the agent.
+				ally_ids: The identifiers of all the allies.
+				enemy_ids: The identifiers of all the enemies.
 		"""
 		super(BehaviorLearningGhostAgent, self).__init__(agent_id, ally_ids,
 														 enemy_ids)
-		self.features = [features.FoodDistanceFeature()]
+		self.features = feature_list
+		self.features += [features.FoodDistanceFeature()]
 		for enemy_id in enemy_ids:
 			self.features.append(features.EnemyDistanceFeature(enemy_id))
 		for id_ in [agent_id] + ally_ids + enemy_ids:
 			self.features.append(features.FragileAgentFeature(id_))
 
-		self.behaviors = [behaviors.FleeBehavior(),
-						  behaviors.SeekBehavior(),
-						  behaviors.PursueBehavior()]
+		self.behaviors = behaviors_list
 
 		self.K = 1.0  # Learning rate
 		self.exploration_rate = 0.1
@@ -1086,7 +1089,7 @@ class BehaviorLearningGhostAgent(GhostAgent):
 		return -1
 
 
-class BehaviorLearningGhostAgentTwo(GhostAgent):
+class BehaviorLearningGhostAgentTwo(BehaviorLearningGhostAgent):
 	"""Behavior Learning Ghosts Agent two.
 
 	Attributes:
@@ -1102,205 +1105,75 @@ class BehaviorLearningGhostAgentTwo(GhostAgent):
 	"""
 
 	def __init__(self, agent_id, ally_ids, enemy_ids):
-		"""Constructor for the BehaviorLearningGhostAgentTwo.
-
-		Extend the GhostAgent constructor.
-
-		Setup the features the ghosts will use, the behaviors, the explotation
-		and exploration rate, initialize a QLearningWithApproximation object
-		initialize behavior count and set test mode to 'False'.
-		Args:
-			agent_id: The identifier of the agent.
-			ally_ids: The identifiers of all the allies.
-			enemy_ids: The identifiers of all the enemies.
 		"""
+			Constructor for the BehaviorLearningGhostAgentTwo.
+
+			Extend the BehaviorLearningGhostAgent constructor.
+
+			Setups the extra features on BehaviourLearningGhostAgentTwo.
+			Args:
+				agent_id: The identifier of the agent.
+				ally_ids: The identifiers of all the allies.
+				enemy_ids: The identifiers of all the enemies.
+		"""
+		feature_list = []
+		for behavior in [behaviors.FleeBehavior, behaviors.SeekBehavior, behaviors.PursueBehavior]:
+			feature_list.append(features.AllybehaviorFeature(behavior,ally_ids))
 		super(BehaviorLearningGhostAgentTwo, self).__init__(agent_id, ally_ids,
-														 enemy_ids)
-		self.features = [features.FoodDistanceFeature()]
-		for enemy_id in enemy_ids:
-			self.features.append(features.EnemyDistanceFeature(enemy_id))
-		for id_ in [agent_id] + ally_ids + enemy_ids:
-			self.features.append(features.FragileAgentFeature(id_))
-		for ally_id in ally_ids:
-			self.features.append(features.AllybehaviorFeature(ally_id))
+														    enemy_ids,feature_list=feature_list)
 
-		self.behaviors = [behaviors.FleeBehavior(),
-						  behaviors.SeekBehavior(),
-						  behaviors.PursueBehavior()]
-
-		self.K = 1.0  # Learning rate
-		self.exploration_rate = 0.1
-		QLearning = learning.QLearningWithApproximation
-		self.learning = QLearning(learning_rate=0.1, discount_factor=0.9,
-								  actions=self.behaviors,
-								  features=self.features,
-								  exploration_rate=self.exploration_rate)
-		self.previous_behavior = self.behaviors[0]
-		self.behavior_count = {}
-		self.reset_behavior_count()
-		self.actual_behavior = self.previous_behavior
-		self.test_mode = False
-
-	def reset_behavior_count(self):
-		"""Reset behavior count for each behavior."""
-		for behavior in self.behaviors:
-			self.behavior_count[str(behavior)] = 0
-
-	def get_policy(self):
-		"""Get the policy for the agent.
-
-		Return:
-			The agent weights.
-		"""
-		return self.learning.get_weights()
-
-	def set_policy(self, weights):
-		"""Set the policy for the agent.
-
-		Set the learning agent weights.
-
-		Args:
-			weights:
-		"""
-		self.learning.set_weights(weights)
-
-	def choose_action(self, state, action, reward, legal_actions, test):
-		"""Choose an suggested action.
-
-		Choose an suggested action, suggested by the QLearningWithApproximation
-		class, or if not in legal actions, it chooses de Directions.STOP action
-		or in the last case it is set to random.
-
-		Args:
-			state: Current game state.
-			action: Last executed action.
-			reward: Reward for the previous action.
-			legal_actions: List of currently allowed actions.
-			test: enable or disable test mode.
-		Returns:
-			A suggested action from the QLearningWithApproximation
-		"""
-		if test:
-			self.enable_test_mode()
-		else:
-			self.enable_learn_mode()
-
-		if not self.test_mode:
-			self.learning.learning_rate = self.K / (self.K + state.iteration)
-			self.learning.learn(state, self.previous_behavior, reward)
-
-		# print ("\nAgente {} Comunica:".format(self.agent_id))
-		# print ("Antes - Behavior do agente {}: {}".
-		# format(self.agent_id, self.actual_behavior))
-		behavior = self.learning.act(state, self.actual_behavior)
-		self.actual_behavior = behavior
-		self.previous_behavior = behavior
-		# print ("Depois - Behavior do agente {}: {}".
-		# format(self.agent_id, behavior))
-
-		suggested_action = behavior(state, legal_actions)
-
-		self.behavior_count[str(behavior)] += 1
-
-		if suggested_action in legal_actions:
-			return suggested_action
-		elif legal_actions == []:
-			return Directions.STOP
-		else:
-			return random.choice(legal_actions)
-
-	def enable_learn_mode(self):
-		"""Enable Learn Mode.
-
-		Set the exploration rate of learning to the class exploration rate.
-		"""
-		self.test_mode = False
-		self.learning.exploration_rate = self.exploration_rate
-
-	def enable_test_mode(self):
-		"""Enable Test Mode."""
-		self.test_mode = True
-		self.learning.exploration_rate = 0
-
-	def previous_behavior_id(self):
-		for id_ in xrange(len(self.behaviors)):
-			if self.previous_behavior == self.behaviors[id_]:
-				return id_
-		return -1
-
-
-class FixedFleeGhostAgent(GhostAgent):
+class FixedFleeGhostAgent(BehaviorLearningGhostAgent):
 	"""GhostAgent that always selects the flee behavior."""
 
-	def choose_action(self, state, action, reward, legal_actions, explore):
-		"""Chooses an action according to the flee behavior, always trying to keep itself the farthest away from the closest enemy
-
-		If there is no legal action, choose the stop action
-
-		Args:
-			state: Current game state.
-			action: Last executed action.
-			reward: Reward for the previous action.
-			legal_actions: List of currently allowed actions.
-			explore: Boolean whether agent is allowed to explore.
-		Returns:
-			action based on the flee behavious
+	def __init__(self, agent_id, ally_ids, enemy_ids):
 		"""
-		behavior = behaviors.FleeBehavior()
-		suggested_action = behavior(state, legal_actions)
-		if suggested_action in legal_actions:
-			return suggested_action
-		elif legal_actions == []:
-			return Directions.STOP
-		else:
-			return random.choice(legal_actions)
+			Constructor for the FixedFleeGhostAgent.
+
+			Extend the BehaviorLearningGhostAgent constructor.
+
+			Setups the behaviours for FixedFleeGhostAgent.
+			Args:
+				agent_id: The identifier of the agent.
+				ally_ids: The identifiers of all the allies.
+				enemy_ids: The identifiers of all the enemies.
+		"""
+		super(FixedFleeGhostAgent, self).__init__(agent_id, ally_ids,
+													enemy_ids,behaviors_list=[behaviors.FleeBehavior()])
 
 
-class FixedSeekGhostAgent(GhostAgent):
+class FixedSeekGhostAgent(BehaviorLearningGhostAgent):
 	"""GhostAgent that always selects the seek behavior."""
 
-	def choose_action(self, state, action, reward, legal_actions, explore):
-		"""Chooses an action according to the seek behavior, trying to move itself into the position that it believes the enemy will move into
-
-		If there is no legal action, choose the stop action
-
-		Args:
-			state: Current game state.
-			action: Last executed action.
-			reward: Reward for the previous action.
-			legal_actions: List of currently allowed actions.
-			explore: Boolean whether agent is allowed to explore.
-		Returns:
-			action based on the seek behavious
+	def __init__(self, agent_id, ally_ids, enemy_ids):
 		"""
-		behavior = behaviors.SeekBehavior()
-		action = behavior(state, legal_actions)
-		if len(legal_actions) > 0:
-			return action
-		return Directions.STOP
+			Constructor for the FixedSeekGhostAgent.
+
+			Extend the BehaviorLearningGhostAgent constructor.
+
+			Setups the behaviours for FixedSeekGhostAgent.
+			Args:
+				agent_id: The identifier of the agent.
+				ally_ids: The identifiers of all the allies.
+				enemy_ids: The identifiers of all the enemies.
+		"""
+		super(FixedSeekGhostAgent, self).__init__(agent_id, ally_ids,
+													enemy_ids,behaviors_list=[behaviors.SeekBehavior()])
 
 
-class FixedPursueGhostAgent(GhostAgent):
+class FixedPursueGhostAgent(BehaviorLearningGhostAgent):
 	"""GhostAgent that always selects the pursue behavior."""
 
-	def choose_action(self, state, action, reward, legal_actions, explore):
-		"""Chooses an action according to the pursue behavior, trying to move itself into the position that it believes the enemy is
-
-		If there is no legal action, choose the stop action
-
-		Args:
-			state: Current game state.
-			action: Last executed action.
-			reward: Reward for the previous action.
-			legal_actions: List of currently allowed actions.
-			explore: Boolean whether agent is allowed to explore.
-		Returns:
-			action based on the pursue behavious
+	def __init__(self, agent_id, ally_ids, enemy_ids):
 		"""
-		behavior = behaviors.PursueBehavior()
-		action = behavior(state, legal_actions)
-		if len(legal_actions) > 0:
-			return action
-		return Directions.STOP
+			Constructor for the FixedPursueGhostAgent.
 
+			Extend the BehaviorLearningGhostAgent constructor.
 
+			Setups the behaviours for FixedPursueGhostAgent.
+			Args:
+				agent_id: The identifier of the agent.
+				ally_ids: The identifiers of all the allies.
+				enemy_ids: The identifiers of all the enemies.
+		"""
+		super(FixedPursueGhostAgent, self).__init__(agent_id, ally_ids,
+													enemy_ids,behaviors_list=[behaviors.PursueBehavior()])

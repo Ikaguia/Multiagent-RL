@@ -109,17 +109,20 @@ class FragileAgentFeature(Feature):
 
 
 class AllybehaviorFeature(Feature):
-    """Get the previous behavious for an agent identifier."""
+    """Gets if any ally was using 'behavior' in the last state."""
 
-    def __init__(self, agent_id):
+    def __init__(self, behavior, ally_ids):
         """Constructor method for the AllybehaviorFeature Class.
 
         Args:
-            agent_id: The identifier of the agent.
+            behavior: The behavior to check for.
+            ally_ids: A list of agent ids to check the behavior.
         Attributes:
-            agent_id: The identifier of the agent.
+            behavior: The behavior to check for.
+            ally_ids: A list of agent ids to check the behavior.
         """
-        self.agent_id = agent_id
+        self.behavior = behavior
+        self.ally_ids = ally_ids
 
     def __call__(self, state, action):
         """Method executed when AllybehaviorFeature Class is called.
@@ -128,6 +131,9 @@ class AllybehaviorFeature(Feature):
             state: Agent state.
             action: Action done for the agent state.
         Returns:
-            Previous behavior of the agent.
+            Boolean checking if any ally was using 'behavior' in the last state
         """
-        return state.get_agent_prev_behavior(self.agent_id)
+        for ally in self.ally_ids:
+            if state.get_agent_prev_behavior(ally) == self.behavior:
+                return True
+        return False

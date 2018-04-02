@@ -6,6 +6,9 @@ Adapts Communication. between controller and the Berkeley Pac-man simulator.
 
 Attributes:
 	DEFAULT_GHOST_AGENT: The default ghost agent, 'ai'.
+	DEFAULT_GHOST_AGENT2: The default ghost agent for the agent 2, 'a1'.
+	DEFAULT_GHOST_AGENT3: The default ghost agent for the agent 3, 'a1'.
+	DEFAULT_GHOST_AGENT4: The default ghost agent for the agent 4, 'a1'.
 	DEFAULT_LAYOUT: The default map layout, 'classic'.
 	DEFAULT_NUMBER_OF_GHOSTS: The default number of ghosts, 3.
 	DEFAULT_NUMBER_OF_LEARNING_RUNS: The default number of learning runs 100.
@@ -39,6 +42,9 @@ __email__ = "gnramos@unb.br"
 
 # Default settings (CLI parsing)
 DEFAULT_GHOST_AGENT = 'ai'
+DEFAULT_GHOST_AGENT2 = 'a1'
+DEFAULT_GHOST_AGENT3 = 'a1'
+DEFAULT_GHOST_AGENT4 = 'a1'
 DEFAULT_LAYOUT = 'classic'
 DEFAULT_NUMBER_OF_GHOSTS = 3
 DEFAULT_NUMBER_OF_LEARNING_RUNS = 100
@@ -88,6 +94,9 @@ class Adapter(object):
 	def __init__(self,
 				 pacman_agent=DEFAULT_PACMAN_AGENT,
 				 ghost_agent=DEFAULT_GHOST_AGENT,
+				 ghost_agent2=DEFAULT_GHOST_AGENT2,
+				 ghost_agent3=DEFAULT_GHOST_AGENT3,
+				 ghost_agent4=DEFAULT_GHOST_AGENT4,
 				 num_ghosts=DEFAULT_NUMBER_OF_GHOSTS,
 				 noise=agents.DEFAULT_NOISE,
 				 policy_file=None,
@@ -193,28 +202,81 @@ class Adapter(object):
 		if not (1 <= self.num_ghosts <= 4):
 			raise ValueError('Must 1-4 ghost(s).')
 
+		self.ghost_class = [None]*4
+
 		if ghost_agent == 'random':
-			self.ghost_class = agents.RandomGhostAgent
+			self.ghost_class[0] = agents.RandomGhostAgent
 		elif ghost_agent == 'ai':
-			self.ghost_class = agents.BehaviorLearningGhostAgent
+			self.ghost_class[0] = agents.BehaviorLearningGhostAgent
 		elif ghost_agent == 'ai2':
-			self.ghost_class = agents.BehaviorLearningGhostAgentTwo
+			self.ghost_class[0] = agents.BehaviorLearningGhostAgentTwo
 		elif ghost_agent == 'fixedFlee':
-			self.ghost_class = agents.FixedFleeGhostAgent
+			self.ghost_class[0] = agents.FixedFleeGhostAgent
 		elif ghost_agent == 'fixedSeek':
-			self.ghost_class = agents.FixedSeekGhostAgent
+			self.ghost_class[0] = agents.FixedSeekGhostAgent
 		elif ghost_agent == 'fixedPursue':
-			self.ghost_class = agents.FixedPursueGhostAgent
+			self.ghost_class[0] = agents.FixedPursueGhostAgent
 		else:
 			raise ValueError('Ghost agent must be ai, ai2, random, fixedFlee, fixedSeek or fixedPursue.')
 
-		ghost_name = self.ghost_class.__name__
+		if ghost_agent2 == 'random':
+			self.ghost_class[1] = agents.RandomGhostAgent
+		elif ghost_agent2 == 'ai':
+			self.ghost_class[1] = agents.BehaviorLearningGhostAgent
+		elif ghost_agent2 == 'ai2':
+			self.ghost_class[1] = agents.BehaviorLearningGhostAgentTwo
+		elif ghost_agent2 == 'fixedFlee':
+			self.ghost_class[1] = agents.FixedFleeGhostAgent
+		elif ghost_agent2 == 'fixedSeek':
+			self.ghost_class[1] = agents.FixedSeekGhostAgent
+		elif ghost_agent2 == 'fixedPursue':
+			self.ghost_class[1] = agents.FixedPursueGhostAgent
+		elif ghost_agent2 == 'a1':
+			self.ghost_class[1] = self.ghost_class[0]
+		else:
+			raise ValueError('Ghost agent 2 must be a1, ai, ai2, random, fixedFlee, fixedSeek or fixedPursue.')
+
+		if ghost_agent3 == 'random':
+			self.ghost_class[2] = agents.RandomGhostAgent
+		elif ghost_agent3 == 'ai':
+			self.ghost_class[2] = agents.BehaviorLearningGhostAgent
+		elif ghost_agent3 == 'ai2':
+			self.ghost_class[2] = agents.BehaviorLearningGhostAgentTwo
+		elif ghost_agent3 == 'fixedFlee':
+			self.ghost_class[2] = agents.FixedFleeGhostAgent
+		elif ghost_agent3 == 'fixedSeek':
+			self.ghost_class[2] = agents.FixedSeekGhostAgent
+		elif ghost_agent3 == 'fixedPursue':
+			self.ghost_class[2] = agents.FixedPursueGhostAgent
+		elif ghost_agent3 == 'a1':
+			self.ghost_class[2] = self.ghost_class[0]
+		else:
+			raise ValueError('Ghost agent 3 must be a1, ai, ai2, random, fixedFlee, fixedSeek or fixedPursue.')
+
+		if ghost_agent4 == 'random':
+			self.ghost_class[3] = agents.RandomGhostAgent
+		elif ghost_agent4 == 'ai':
+			self.ghost_class[3] = agents.BehaviorLearningGhostAgent
+		elif ghost_agent4 == 'ai2':
+			self.ghost_class[3] = agents.BehaviorLearningGhostAgentTwo
+		elif ghost_agent4 == 'fixedFlee':
+			self.ghost_class[3] = agents.FixedFleeGhostAgent
+		elif ghost_agent4 == 'fixedSeek':
+			self.ghost_class[3] = agents.FixedSeekGhostAgent
+		elif ghost_agent4 == 'fixedPursue':
+			self.ghost_class[3] = agents.FixedPursueGhostAgent
+		elif ghost_agent4 == 'a1':
+			self.ghost_class[3] = self.ghost_class[0]
+		else:
+			raise ValueError('Ghost agent 4 must be a1, ai, ai2, random, fixedFlee, fixedSeek or fixedPursue.')
+
 		self.ghosts = []
 		for x in xrange(num_ghosts):
+			ghost_name = self.ghost_class[x].__name__
 			ghost = agents.GhostAdapterAgent(x + 1, client=client,
 											 comm=self.comm, mse=self.mse)
 			log('Created {} #{}.'.format(ghost_name, ghost.agent_id))
-			self.__register_agent__(ghost, 'ghost', self.ghost_class)
+			self.__register_agent__(ghost, 'ghost', self.ghost_class[x])
 			self.ghosts.append(ghost)
 
 		self.all_agents = [self.pacman] + self.ghosts
@@ -383,8 +445,8 @@ class Adapter(object):
 		if self.pacman_class == agents.BehaviorLearningPacmanAgent:
 			self.__log_behavior_count__(self.pacman, results)
 
-		if self.ghost_class == agents.BehaviorLearningGhostAgent:
-			for ghost in self.ghosts:
+		for ghost in self.ghosts:
+			if issubclass(self.ghost_class[ghost.agent_id-1],agents.BehaviorLearningGhostAgent):
 				self.__log_behavior_count__(ghost, results)
 
 		# Log score
@@ -420,8 +482,8 @@ class Adapter(object):
 		if self.pacman_class == agents.BehaviorLearningPacmanAgent:
 			policies[self.pacman.agent_id] = self.__get_policy__(self.pacman)
 
-		if self.ghost_class == agents.BehaviorLearningGhostAgent:
-			for ghost in self.ghosts:
+		for ghost in self.ghosts:
+			if issubclass(self.ghost_class[ghost.agent_id-1],agents.BehaviorLearningGhostAgent):
 				policies[ghost.agent_id] = self.__get_policy__(ghost)
 
 		self.__write_to_file__(self.policy_file, policies)
@@ -454,8 +516,8 @@ class Adapter(object):
 		if self.pacman_class == agents.BehaviorLearningPacmanAgent:
 			results['behavior_count'][self.pacman.agent_id] = {}
 
-		if self.ghost_class == agents.BehaviorLearningGhostAgent:
-			for ghost in self.ghosts:
+		for ghost in self.ghosts:
+			if issubclass(self.ghost_class[ghost.agent_id-1],agents.BehaviorLearningGhostAgent):
 				results['behavior_count'][ghost.agent_id] = {}
 
 		# Load policies from file
