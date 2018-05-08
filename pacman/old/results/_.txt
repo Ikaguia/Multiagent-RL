@@ -55,3 +55,7 @@ learn ai2_4g:
 learn ai_4g:
 	pontuacao: (1984,2237) -> p(x) = 1984 + (2.53 * x)
 	duracao: (287,320)
+
+learn ai_3g:
+	pontuacao: (1820,2418) -> p(x) = 1820 + (5,98 * x)
+	duracao: (270,346)

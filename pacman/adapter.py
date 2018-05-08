@@ -33,6 +33,8 @@ import communication as comm
 
 import cliparser
 
+import random
+
 __author__ = "Matheus Portela and Guilherme N. Ramos"
 __credits__ = ["Matheus Portela", "Guilherme N. Ramos", "Renato Nobre",
 			   "Pedro Saman", "Cristiano K. Brust"]
@@ -107,7 +109,8 @@ class Adapter(object):
 				 output_file=DEFAULT_OUTPUT_FILE,
 				 graphics=False,
 				 comm=DEFAULT_COMM,
-				 mse=DEFAULT_MSE):
+				 mse=DEFAULT_MSE,
+				 random_seed=None):
 		"""Constructor for the Adapter class.
 
 		Setup the layout, the pacman agent, the ghosts agents, the policy file,
@@ -138,6 +141,8 @@ class Adapter(object):
 			ValueError: Unexpected number of learing simulations.
 			ValueError: Unexpected number of test simulations.
 		"""
+
+		if(random_seed): random.seed(random_seed)
 		agents.NOISE = noise
 		# Setup layout
 		LAYOUT_PATH = 'pacman/layouts'
@@ -202,73 +207,38 @@ class Adapter(object):
 		if not (1 <= self.num_ghosts <= 4):
 			raise ValueError('Must 1-4 ghost(s).')
 
-		self.ghost_class = [None]*4
+		def get_ghost_class_agent(ghost_class, agent_id, ghost1_agent=None):
+			if ghost_class == 'random':
+				return agents.RandomGhostAgent
+			elif ghost_class == 'ai':
+				return agents.BehaviorLearningGhostAgent
+			elif ghost_class == 'ai2':
+				return agents.BehaviorLearningGhostAgentTwo
+			elif ghost_class == 'ai3':
+				return agents.BehaviorLearningGhostAgentThree
+			elif ghost_class == 'ai4':
+				return agents.BehaviorLearningGhostAgentFour
+			elif ghost_class == 'ai5':
+				return agents.BehaviorLearningGhostAgentFive
+			elif ghost_class == 'fixedFlee':
+				return agents.FixedFleeGhostAgent
+			elif ghost_class == 'fixedSeek':
+				return agents.FixedSeekGhostAgent
+			elif ghost_class == 'fixedPursue':
+				return agents.FixedPursueGhostAgent
+			else:
+				if ghost1_agent:
+					if ghost_class == 'a1':
+						return ghost1_agent
+					else:
+						raise ValueError('Ghost agent must be ai, ai2, ai3, ai4, ai5, random, fixedFlee, fixedSeek or fixedPursue.')
+				else:
+					raise ValueError('Ghost agent must be a1, ai, ai2, ai3, ai4, ai5, random, fixedFlee, fixedSeek or fixedPursue.')
 
-		if ghost_agent == 'random':
-			self.ghost_class[0] = agents.RandomGhostAgent
-		elif ghost_agent == 'ai':
-			self.ghost_class[0] = agents.BehaviorLearningGhostAgent
-		elif ghost_agent == 'ai2':
-			self.ghost_class[0] = agents.BehaviorLearningGhostAgentTwo
-		elif ghost_agent == 'fixedFlee':
-			self.ghost_class[0] = agents.FixedFleeGhostAgent
-		elif ghost_agent == 'fixedSeek':
-			self.ghost_class[0] = agents.FixedSeekGhostAgent
-		elif ghost_agent == 'fixedPursue':
-			self.ghost_class[0] = agents.FixedPursueGhostAgent
-		else:
-			raise ValueError('Ghost agent must be ai, ai2, random, fixedFlee, fixedSeek or fixedPursue.')
-
-		if ghost_agent2 == 'random':
-			self.ghost_class[1] = agents.RandomGhostAgent
-		elif ghost_agent2 == 'ai':
-			self.ghost_class[1] = agents.BehaviorLearningGhostAgent
-		elif ghost_agent2 == 'ai2':
-			self.ghost_class[1] = agents.BehaviorLearningGhostAgentTwo
-		elif ghost_agent2 == 'fixedFlee':
-			self.ghost_class[1] = agents.FixedFleeGhostAgent
-		elif ghost_agent2 == 'fixedSeek':
-			self.ghost_class[1] = agents.FixedSeekGhostAgent
-		elif ghost_agent2 == 'fixedPursue':
-			self.ghost_class[1] = agents.FixedPursueGhostAgent
-		elif ghost_agent2 == 'a1':
-			self.ghost_class[1] = self.ghost_class[0]
-		else:
-			raise ValueError('Ghost agent 2 must be a1, ai, ai2, random, fixedFlee, fixedSeek or fixedPursue.')
-
-		if ghost_agent3 == 'random':
-			self.ghost_class[2] = agents.RandomGhostAgent
-		elif ghost_agent3 == 'ai':
-			self.ghost_class[2] = agents.BehaviorLearningGhostAgent
-		elif ghost_agent3 == 'ai2':
-			self.ghost_class[2] = agents.BehaviorLearningGhostAgentTwo
-		elif ghost_agent3 == 'fixedFlee':
-			self.ghost_class[2] = agents.FixedFleeGhostAgent
-		elif ghost_agent3 == 'fixedSeek':
-			self.ghost_class[2] = agents.FixedSeekGhostAgent
-		elif ghost_agent3 == 'fixedPursue':
-			self.ghost_class[2] = agents.FixedPursueGhostAgent
-		elif ghost_agent3 == 'a1':
-			self.ghost_class[2] = self.ghost_class[0]
-		else:
-			raise ValueError('Ghost agent 3 must be a1, ai, ai2, random, fixedFlee, fixedSeek or fixedPursue.')
-
-		if ghost_agent4 == 'random':
-			self.ghost_class[3] = agents.RandomGhostAgent
-		elif ghost_agent4 == 'ai':
-			self.ghost_class[3] = agents.BehaviorLearningGhostAgent
-		elif ghost_agent4 == 'ai2':
-			self.ghost_class[3] = agents.BehaviorLearningGhostAgentTwo
-		elif ghost_agent4 == 'fixedFlee':
-			self.ghost_class[3] = agents.FixedFleeGhostAgent
-		elif ghost_agent4 == 'fixedSeek':
-			self.ghost_class[3] = agents.FixedSeekGhostAgent
-		elif ghost_agent4 == 'fixedPursue':
-			self.ghost_class[3] = agents.FixedPursueGhostAgent
-		elif ghost_agent4 == 'a1':
-			self.ghost_class[3] = self.ghost_class[0]
-		else:
-			raise ValueError('Ghost agent 4 must be a1, ai, ai2, random, fixedFlee, fixedSeek or fixedPursue.')
+		self.ghost_class  = [get_ghost_class_agent(ghost_agent, 1)]
+		self.ghost_class += [get_ghost_class_agent(ghost_agent2, 2, self.ghost_class[0])]
+		self.ghost_class += [get_ghost_class_agent(ghost_agent3, 3, self.ghost_class[0])]
+		self.ghost_class += [get_ghost_class_agent(ghost_agent4, 4, self.ghost_class[0])]
 
 		self.ghosts = []
 		for x in xrange(num_ghosts):

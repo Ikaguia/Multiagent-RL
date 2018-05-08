@@ -16,6 +16,8 @@ __maintainer__ = "Guilherme N. Ramos"
 __email__ = "gnramos@unb.br"
 
 
+import random
+
 import sys
 import time;
 def log(msg):
@@ -41,7 +43,7 @@ class Controller(object):
 		server: A ZMQMessengerBase.
 	"""
 
-	def __init__(self, server):
+	def __init__(self, server, random_seed=None):
 		"""Constructor for the Controller Class.
 
 		Set all the attributes to empty dictionaries, exept server there is set
@@ -52,8 +54,11 @@ class Controller(object):
 		Raises:
 			ValueError: Invalid server.
 		"""
+
 		if not isinstance(server, comm.ZMQMessengerBase):
 			raise ValueError('Invalid server')
+
+		if(random_seed): random.seed(random_seed)
 
 		self.agents = {}
 		self.agent_classes = {}

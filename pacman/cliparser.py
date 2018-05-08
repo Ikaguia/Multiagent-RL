@@ -23,6 +23,9 @@ __maintainer__ = "Guilherme N. Ramos"
 __email__ = "gnramos@unb.br"
 
 
+DEFAULT_RND_SEED = 123456789
+
+
 def get_Adapter():
     """Parse all the arguments to the CLI.
 
@@ -44,7 +47,7 @@ def get_Adapter():
                         help='results output file')
 
     group = parser.add_argument_group('Experimental Setup')
-    ghost_ai_choices = ['random', 'ai', 'ai2', 'fixedFlee', 'fixedSeek', 'fixedPursue']
+    ghost_ai_choices = ['random', 'ai', 'ai2', 'ai3', 'ai4', 'ai5', 'fixedFlee', 'fixedSeek', 'fixedPursue']
     group.add_argument('--ghost-agent', dest='ghost_agent', type=str,
                        choices=ghost_ai_choices, default=DEFAULT_GHOST_AGENT,
                        help='select ghost agent')
@@ -85,6 +88,9 @@ def get_Adapter():
                        default=DEFAULT_MSE,
                        choices=[0, 1],
                        help='Enable/Disable MSE calculation')
+    group.add_argument('--seed', dest='random_seed', type=int,
+                       default=DEFAULT_RND_SEED,
+                       help='Seed for the random number generator')
 
     group = parser.add_argument_group('Communication')
     group.add_argument('--comm', dest='comm', type=str,
@@ -120,7 +126,8 @@ def get_Adapter():
                       output_file=args.output_file,
                       graphics=args.graphics,
                       comm=args.comm,
-                      mse=args.mse)
+                      mse=args.mse,
+                      random_seed=args.random_seed)
 
     return adapter
 
@@ -140,8 +147,12 @@ def get_Controller():
     parser.add_argument('--port', dest='port', type=int,
                         default=DEFAULT_TCP_PORT,
                         help='TCP port to connect to adapter')
+    parser.add_argument('--seed', dest='random_seed', type=int,
+                       default=DEFAULT_RND_SEED,
+                       help='Seed for the random number generator')
     args, unknown = parser.parse_known_args()
 
     server = TCPServer(port=args.port)
 
-    return Controller(server)
+    return Controller(server,
+                      random_seed=args.random_seed)

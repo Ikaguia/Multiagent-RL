@@ -962,7 +962,7 @@ class BehaviorLearningGhostAgent(GhostAgent):
 
 	def __init__(self, agent_id, ally_ids, enemy_ids,
 		behaviors_list=[behaviors.FleeBehavior(),behaviors.SeekBehavior(),behaviors.PursueBehavior()],
-		feature_list=[]):
+		feature_list=[features.FoodDistanceFeature()]):
 
 		"""
 			Constructor for the BehaviorLearningGhostAgent.
@@ -980,7 +980,6 @@ class BehaviorLearningGhostAgent(GhostAgent):
 		super(BehaviorLearningGhostAgent, self).__init__(agent_id, ally_ids,
 														 enemy_ids)
 		self.features = feature_list
-		self.features += [features.FoodDistanceFeature()]
 		for enemy_id in enemy_ids:
 			self.features.append(features.EnemyDistanceFeature(enemy_id))
 		for id_ in [agent_id] + ally_ids + enemy_ids:
@@ -1082,12 +1081,6 @@ class BehaviorLearningGhostAgent(GhostAgent):
 		self.test_mode = True
 		self.learning.exploration_rate = 0
 
-	def previous_behavior_id(self):
-		for id_ in xrange(len(self.behaviors)):
-			if self.previous_behavior == self.behaviors[id_]:
-				return id_
-		return -1
-
 
 class BehaviorLearningGhostAgentTwo(BehaviorLearningGhostAgent):
 	"""Behavior Learning Ghosts Agent two.
@@ -1108,7 +1101,7 @@ class BehaviorLearningGhostAgentTwo(BehaviorLearningGhostAgent):
 		"""
 			Constructor for the BehaviorLearningGhostAgentTwo.
 
-			Extend the BehaviorLearningGhostAgent constructor.
+			Extends the BehaviorLearningGhostAgent constructor.
 
 			Setups the extra features on BehaviourLearningGhostAgentTwo.
 			Args:
@@ -1116,11 +1109,112 @@ class BehaviorLearningGhostAgentTwo(BehaviorLearningGhostAgent):
 				ally_ids: The identifiers of all the allies.
 				enemy_ids: The identifiers of all the enemies.
 		"""
-		feature_list = []
-		for behavior in [behaviors.FleeBehavior, behaviors.SeekBehavior, behaviors.PursueBehavior]:
-			feature_list.append(features.AllybehaviorFeature(behavior,ally_ids))
+		feature_list = [
+			features.AllybehaviorFeature(behavior,ally_ids)
+			for behavior in [behaviors.FleeBehavior, behaviors.SeekBehavior, behaviors.PursueBehavior]
+		]
 		super(BehaviorLearningGhostAgentTwo, self).__init__(agent_id, ally_ids,
 														    enemy_ids,feature_list=feature_list)
+
+
+class BehaviorLearningGhostAgentThree(BehaviorLearningGhostAgent):
+	"""Behavior Learning Ghosts Agent three.
+
+	Attributes:
+		features: features the Pacman can use.
+		behaviors: list of Pacman possible behaviors.
+		K: learning rate.
+		exploration_rate: rate of exploration.
+		learning: instance of QLearningWithApproximation.
+		previous_behavior: The previous behavior used.
+		behavior_count: The count of how much a behavior is used.
+		reset_behavior_count: Call reset_behavior_count.
+		test_mode: Set test mode to 'False'.
+	"""
+
+	def __init__(self, agent_id, ally_ids, enemy_ids):
+		"""
+			Constructor for the BehaviorLearningGhostAgentThree.
+
+			Extends the BehaviorLearningGhostAgent constructor.
+
+			Setups the extra features on BehaviourLearningGhostAgentThree.
+			Args:
+				agent_id: The identifier of the agent.
+				ally_ids: The identifiers of all the allies.
+				enemy_ids: The identifiers of all the enemies.
+		"""
+		behaviors_list = [behaviors.FleeBehavior, behaviors.SeekBehavior, behaviors.PursueBehavior]
+		feature_list = [features.AllybehaviorOldFeature(ally,behaviors_list) for ally in ally_ids]
+		super(BehaviorLearningGhostAgentThree, self).__init__(agent_id, ally_ids,
+														    enemy_ids,feature_list=feature_list)
+
+
+class BehaviorLearningGhostAgentFour(BehaviorLearningGhostAgent):
+	"""Behavior Learning Ghosts Agent Four.
+
+	Attributes:
+		features: features the Pacman can use.
+		behaviors: list of Pacman possible behaviors.
+		K: learning rate.
+		exploration_rate: rate of exploration.
+		learning: instance of QLearningWithApproximation.
+		previous_behavior: The previous behavior used.
+		behavior_count: The count of how much a behavior is used.
+		reset_behavior_count: Call reset_behavior_count.
+		test_mode: Set test mode to 'False'.
+	"""
+
+	def __init__(self, agent_id, ally_ids, enemy_ids):
+		"""
+			Constructor for the BehaviorLearningGhostAgentFour.
+
+			Extends the BehaviorLearningGhostAgent constructor.
+
+			Setups the extra features on BehaviourLearningGhostAgentFour.
+			Args:
+				agent_id: The identifier of the agent.
+				ally_ids: The identifiers of all the allies.
+				enemy_ids: The identifiers of all the enemies.
+		"""
+		behaviors_list = [behaviors.FleeBehavior, behaviors.SeekBehavior, behaviors.PursueBehavior]
+		feature_list = [features.AllyEnemyDistanceFeature(enemy_id,ally_ids) for enemy_id in enemy_ids]
+		super(BehaviorLearningGhostAgentFour, self).__init__(agent_id, ally_ids,
+														    enemy_ids,feature_list=feature_list)
+
+
+class BehaviorLearningGhostAgentFive(BehaviorLearningGhostAgent):
+	"""Behavior Learning Ghosts Agent Five.
+
+	Attributes:
+		features: features the Pacman can use.
+		behaviors: list of Pacman possible behaviors.
+		K: learning rate.
+		exploration_rate: rate of exploration.
+		learning: instance of QLearningWithApproximation.
+		previous_behavior: The previous behavior used.
+		behavior_count: The count of how much a behavior is used.
+		reset_behavior_count: Call reset_behavior_count.
+		test_mode: Set test mode to 'False'.
+	"""
+
+	def __init__(self, agent_id, ally_ids, enemy_ids):
+		"""
+			Constructor for the BehaviorLearningGhostAgentFive.
+
+			Extends the BehaviorLearningGhostAgent constructor.
+
+			Setups the extra features on BehaviourLearningGhostAgentFive.
+			Args:
+				agent_id: The identifier of the agent.
+				ally_ids: The identifiers of all the allies.
+				enemy_ids: The identifiers of all the enemies.
+		"""
+		behaviors_list = [behaviors.FleeBehavior, behaviors.SeekBehavior, behaviors.PursueBehavior]
+		feature_list = [features.ClosestToEnemyFeature(enemy_id,ally_ids) for enemy_id in enemy_ids]
+		super(BehaviorLearningGhostAgentFive, self).__init__(agent_id, ally_ids,
+														    enemy_ids,feature_list=feature_list)
+
 
 class FixedFleeGhostAgent(BehaviorLearningGhostAgent):
 	"""GhostAgent that always selects the flee behavior."""
@@ -1129,7 +1223,7 @@ class FixedFleeGhostAgent(BehaviorLearningGhostAgent):
 		"""
 			Constructor for the FixedFleeGhostAgent.
 
-			Extend the BehaviorLearningGhostAgent constructor.
+			Extends the BehaviorLearningGhostAgent constructor.
 
 			Setups the behaviours for FixedFleeGhostAgent.
 			Args:
@@ -1148,7 +1242,7 @@ class FixedSeekGhostAgent(BehaviorLearningGhostAgent):
 		"""
 			Constructor for the FixedSeekGhostAgent.
 
-			Extend the BehaviorLearningGhostAgent constructor.
+			Extends the BehaviorLearningGhostAgent constructor.
 
 			Setups the behaviours for FixedSeekGhostAgent.
 			Args:
@@ -1167,7 +1261,7 @@ class FixedPursueGhostAgent(BehaviorLearningGhostAgent):
 		"""
 			Constructor for the FixedPursueGhostAgent.
 
-			Extend the BehaviorLearningGhostAgent constructor.
+			Extends the BehaviorLearningGhostAgent constructor.
 
 			Setups the behaviours for FixedPursueGhostAgent.
 			Args:
@@ -1177,3 +1271,4 @@ class FixedPursueGhostAgent(BehaviorLearningGhostAgent):
 		"""
 		super(FixedPursueGhostAgent, self).__init__(agent_id, ally_ids,
 													enemy_ids,behaviors_list=[behaviors.PursueBehavior()])
+
