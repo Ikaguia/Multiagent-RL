@@ -1,3 +1,7 @@
+SHELL=bash
+
+
+
 POLICIES_PATH = policies
 RESULTS_PATH = results
 
@@ -8,8 +12,8 @@ GHOST	= --ghost-agent
 NGHOSTS = --num-ghosts $(ARG_NGHOSTS)
 TEST	= -l 1 -t $(ARG_TGAMES)
 LEARN	= -l $(LGAMES) -t 1
-POLICY	= --policy-file $(POLICY_FILE)
-SEED    = --seed $$($(ARG_SEED) * $(ARG_LSTEPS))
+POLICY	= --policy-file
+SEED    = --seed $$(($(ARG_SEED) * $(ARG_LSTEPS)))
 LGAMES  = $$(($(ARG_LSTEP) * $(ARG_LSTEPS)))
 
 #default values, can be overwritten via command line
@@ -21,20 +25,17 @@ ARG_TGAMES = 10
 ARG_NGHOSTS = 2
 #each learn step is 50 learn games
 ARG_LSTEP = 50
-#2 learn steps, 100 learn games
-ARG_LSTEPS = 2
+#4 learn steps, 200 learn games
+ARG_LSTEPS = 4
 #seed for random number generator
 ARG_SEED = 123456789
 #ghost agent
 ARG_GHAGENT = ai
 #pacman agent
 ARG_PMAGENT = fleet
-#clean
-ARG_CLEAN = 1
 ####
 
-ARGS_ = ARG_NGHOSTS=$(ARG_NGHOSTS) ARG_LSTEP=$(ARG_LSTEP) ARG_SEED=$(ARG_SEED) ARG_GHAGENT=$(ARG_GHAGENT) ARG_CLEAN=0
-ARGS = $(ARGS_) ARG_LSTEPS=$(ARG_LSTEPS)
+ARGS = ARG_TGAMES=$(ARG_TGAMES) ARG_NGHOSTS=$(ARG_NGHOSTS) ARG_LSTEP=$(ARG_LSTEP) ARG_LSTEPS=$(ARG_LSTEPS) ARG_SEED=$(ARG_SEED) ARG_GHAGENT=$(ARG_GHAGENT) ARG_PMAGENT=$(ARG_PMAGENT)
 
 POLICY_FILE = $(POLICIES_PATH)/$(ARG_GHAGENT)_$(ARG_NGHOSTS)g_$(ARG_PMAGENT)_$(LGAMES)
 L_RESULT_FILE = $(RESULTS_PATH)/learn-$(ARG_GHAGENT)_$(ARG_NGHOSTS)g_$(ARG_PMAGENT)_$(LGAMES).txt
@@ -44,52 +45,59 @@ TMP_POLICY = $(POLICIES_PATH)/__temp
 
 #rule to learn policies for ghosts
 learn-ghost:
-ifeq ($(ARG_CLEAN), 1)
-	@(rm $(TMP_POLICY) || true)
-endif
-ifneq ($(shell test -e $(POLICY_FILE) && echo -n yes),yes)
-	@echo "learning $(POLICY_FILE)"
-ifneq ($(ARG_LSTEPS), 1)
-	@($(MAKE) learn-ghost $(ARGS_) ARG_LSTEPS=$$(($(ARG_LSTEPS) - 1)))
-endif
-	($(MAKE) learn-policy $(ARGS))
-else
-	@echo "found $(POLICY_FILE)"
-	@cp $(POLICY_FILE) $(TMP_POLICY)
-endif
-ifeq ($(ARG_CLEAN), 1)
-	@(rm $(TMP_POLICY) || true)
-endif
+	@clear || cls
+	@rm -f $(TMP_POLICY)
+	@rm -f results.txt
+	@for(( i=1; i<=$(ARG_LSTEPS); ++i ))do\
+		f=$(POLICIES_PATH)/$(ARG_GHAGENT)_$(ARG_NGHOSTS)g_$(ARG_PMAGENT)_$$((( $$i * $(ARG_LSTEP) )));\
+		echo "#looking for $$f";\
+		if [ -e $$f ]; then\
+			echo "#found it";\
+		else\
+			echo "#didnt find it, building it instead";\
+			if [[ ! $$i -eq 1 ]]; then\
+				echo "(cp $$p $(TMP_POLICY))";\
+				cp $$p $(TMP_POLICY);\
+			fi;\
+			$(MAKE) learn-policy $(ARGS) LGAMES=$$((( $$i * $(ARG_LSTEP) )));\
+		fi;\
+		p=$$f;\
+	done
+	@rm -f $(TMP_POLICY)
+	@echo "#done"
 
 #rule to learn new policies for ghosts
 relearn-ghost:
-ifeq ($(ARG_CLEAN), 1)
-	@(rm $(TMP_POLICY) || true)
-endif
-ifneq ($(ARG_LSTEPS), 1)
-	@($(MAKE) relearn-ghost $(ARGS_) ARG_LSTEPS=$$(($(ARG_LSTEPS) - 1)))
-endif
-	@echo "($(MAKE) learn-policy $(ARGS))"
-	@#($(MAKE) $(POLICY_FILE) $(ARGS))
-ifeq ($(ARG_CLEAN), 1)
-	@(rm $(TMP_POLICY) || true)
-endif
+	@clear || cls
+	@rm -f $(TMP_POLICY)
+	@rm -f results.txt
+	for(( i=1; i<$(ARG_LSTEPS); ++i ))do\
+		f=$(POLICIES_PATH)/$(ARG_GHAGENT)_$(ARG_NGHOSTS)g_$(ARG_PMAGENT)_$$((( $$i * $(ARG_LSTEP) )));\
+		echo "#learning $$f";\
+		if [[ ! $$i -eq 1 ]]; then\
+			echo "(cp $$p $(TMP_POLICY))";\
+		fi;\
+		$(MAKE) learn-policy $(ARGS) LGAMES=$$((( $$i * $(ARG_LSTEP) )));\
+		p=$$f;\
+	done
+	@rm -f $(TMP_POLICY)
+	@echo "#done"
 
 #rule to make policy files
 learn-policy: stop controller
-	($(ADAPTER) $(SEED) -l $(ARG_LSTEP) -t 1 $(PACMAN) $(NGHOSTS) $(GHOST) $(ARG_GHAGENT) --policy-file $(TMP_POLICY))
+	($(ADAPTER) $(SEED) -l $(ARG_LSTEP) -t 1 $(PACMAN) $(NGHOSTS) $(GHOST) $(ARG_GHAGENT) $(POLICY) $(TMP_POLICY))
 	(cp $(TMP_POLICY) $(POLICY_FILE))
 	(mv results.txt $(L_RESULT_FILE))
 #test learned policies
 test-ghost: stop controller
-ifeq ($(shell test -e $(POLICY_FILE) && echo -n yes),yes)
-	@(cp $(POLICY_FILE) $(TMP_POLICY))
-	($(ADAPTER) $(SEED) $(TEST) $(PACMAN) $(NGHOSTS) $(GHOST) $(ARG_GHAGENT) $(POLICY) $(TMP_POLICY))
-	(mv results.txt $(T_RESULT_FILE))
-	@(rm $(TMP_POLICY))
-else
-	@(echo "Missing policy file '$(POLICY_FILE)'")
-endif
+	@if [ -e $(POLICY_FILE) ];then\
+		cp $(POLICY_FILE) $(TMP_POLICY);\
+		echo "($(ADAPTER) $(SEED) $(TEST) $(PACMAN) $(NGHOSTS) $(GHOST) $(ARG_GHAGENT) $(POLICY) $(TMP_POLICY))";\
+		$(ADAPTER) $(SEED) $(TEST) $(PACMAN) $(NGHOSTS) $(GHOST) $(ARG_GHAGENT) $(POLICY) $(TMP_POLICY);\
+		rm $(TMP_POLICY);\
+	else\
+		echo "Missing policy file '$(POLICY_FILE)'";\
+	fi
 #test fixed ghosts with no learning phase
 test-fghost-%: stop controller
 	($(ADAPTER) $(SEED) $(TEST) $(PACMAN) --num-ghosts 2 $(GHOST) $*)
@@ -108,28 +116,25 @@ controller:#start the controller
 stop:#stop all previous python processes
 	(pkill python || true)
 old-% : #rename a file to prevent overwriting it	#old(file)
-	@#if file exists
-ifeq ($(shell test -e $* && echo -n yes),yes)
-	@#if file_old exists
-ifeq ($(shell test -e $*_old && echo -n yes),yes)
-	@#recursively call old(file_old)
-	($(MAKE) old-$*_old)
-endif
-	@#rename file to file_old
-	(mv $* $*_old)
-endif
+	@if [ -e $* ];then\
+		if [ -e $*_old ];then\
+			$(MAKE) old-$*_old;\
+		fi;\
+		mv $* $*_old;\
+	fi;\
 old-$(POLICIES_PATH)/% : #same as old-%
-ifeq ($(shell test -e $(POLICIES_PATH)/$* && echo -n yes),yes)
-ifeq ($(shell test -e $(POLICIES_PATH)/$*_old && echo -n yes),yes)
-	($(MAKE) old-$(POLICIES_PATH)/$*_old)
-endif
-	(mv $(POLICIES_PATH)/$* $(POLICIES_PATH)/$*_old)
-endif
+	@if [ -e $(POLICIES_PATH)/$* ];then\
+		if [ -e $(POLICIES_PATH)/$*_old ];then\
+			$(MAKE) old-$(POLICIES_PATH)/$*_old;\
+		fi;\
+		mv $(POLICIES_PATH)/$* $(POLICIES_PATH)/$*_old;\
+	fi;\
 
 debug:
 	@echo $(POLICY_FILE)
 test: stop controller
 	($(ADAPTER) $(SEED) -l 1 -t 1 $(PACMAN) $(NGHOSTS) $(GHOST) $(ARG_GHAGENT))
+
 
 .PHONY: old-$(POLICIES_PATH)/% old-% stop controller
 .PHONY: test-fghosts-fsp test-fghosts-sp test-fghosts-fp test-fghosts-fs test-fghost-%

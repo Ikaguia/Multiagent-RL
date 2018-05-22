@@ -135,8 +135,8 @@ class AllybehaviorFeature(Feature):
 		"""
 		for ally in self.ally_ids:
 			if state.get_agent_prev_behavior(ally) == self.behavior:
-				return True
-		return False
+				return 1.0
+		return 0.0
 
 
 class AllybehaviorOldFeature(Feature):
@@ -166,8 +166,8 @@ class AllybehaviorOldFeature(Feature):
 		"""
 		for i in xrange(len(self.behavior_list)):
 			if state.get_agent_prev_behavior(self.ally) == self.behavior_list[i]:
-				return i
-		return len(self.behavior_list)
+				return i / float(len(self.behavior_list))
+		return 1.0
 
 
 
@@ -245,7 +245,7 @@ class ClosestToEnemyFeature(Feature):
 		my_distance = dist(state.agent_id)
 		for ally_id in self.ally_ids:
 			if dist(ally_id) < my_distance:
-				return False
-		return True
+				return 0.0
+		return 1.0
 
 
