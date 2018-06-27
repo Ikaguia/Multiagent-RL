@@ -42,6 +42,37 @@ L_RESULT_FILE = $(RESULTS_PATH)/learn-$(ARG_GHAGENT)_$(ARG_NGHOSTS)g_$(ARG_PMAGE
 T_RESULT_FILE = $(RESULTS_PATH)/test-$(ARG_GHAGENT)_$(ARG_NGHOSTS)g_$(ARG_PMAGENT)_$(LGAMES).txt
 TMP_POLICY = $(POLICIES_PATH)/__temp
 
+all:
+	@for(( i=1; i<=5; ++i ))do\
+		a=ai;\
+		if [[ $$i -ne 1 ]]; then a=$$a$$i; fi;\
+		for(( j=2; j<=4; j++ ))do\
+			echo $(MAKE) learn-ghost ARG_GHAGENT=$$a ARG_NGHOSTS=$$j ARG_LSTEP=100 ARG_LSTEPS=1;\
+			$(MAKE) --no-print-directory learn-ghost ARG_GHAGENT=$$a ARG_NGHOSTS=$$j ARG_LSTEP=100 ARG_LSTEPS=1;\
+			echo $(MAKE) test-ghost ARG_GHAGENT=$$a ARG_NGHOSTS=$$j ARG_LSTEP=100 ARG_LSTEPS=1;\
+			$(MAKE) --no-print-directory test-ghost ARG_GHAGENT=$$a ARG_NGHOSTS=$$j ARG_LSTEP=100 ARG_LSTEPS=1;\
+		done;\
+	done
+
+learn-all:
+	@for(( i=1; i<=5; ++i ))do\
+		a=ai;\
+		if [[ $$i -ne 1 ]]; then a=$$a$$i; fi;\
+		for(( j=2; j<=4; j++ ))do\
+			echo $(MAKE) learn-ghost ARG_GHAGENT=$$a ARG_NGHOSTS=$$j ARG_LSTEP=100 ARG_LSTEPS=1;\
+			$(MAKE) --no-print-directory learn-ghost ARG_GHAGENT=$$a ARG_NGHOSTS=$$j ARG_LSTEP=100 ARG_LSTEPS=1;\
+		done;\
+	done
+
+test-all:
+	@for(( i=1; i<=5; ++i ))do\
+		a=ai;\
+		if [[ $$i -ne 1 ]]; then a=$$a$$i; fi;\
+		for(( j=2; j<=4; j++ ))do\
+			echo $(MAKE) test-ghost ARG_GHAGENT=$$a ARG_NGHOSTS=$$j ARG_LSTEP=100 ARG_LSTEPS=1;\
+			$(MAKE) --no-print-directory test-ghost ARG_GHAGENT=$$a ARG_NGHOSTS=$$j ARG_LSTEP=100 ARG_LSTEPS=1;\
+		done;\
+	done
 
 #rule to learn policies for ghosts
 learn-ghost:
@@ -91,13 +122,16 @@ learn-policy: stop controller
 #test learned policies
 test-ghost: stop controller
 	@if [ -e $(POLICY_FILE) ];then\
-		cp $(POLICY_FILE) $(TMP_POLICY);\
-		echo "($(ADAPTER) $(SEED) $(TEST) $(PACMAN) $(NGHOSTS) $(GHOST) $(ARG_GHAGENT) $(POLICY) $(TMP_POLICY))";\
-		$(ADAPTER) $(SEED) $(TEST) $(PACMAN) $(NGHOSTS) $(GHOST) $(ARG_GHAGENT) $(POLICY) $(TMP_POLICY);\
-		rm $(TMP_POLICY);\
+		if [ -e $(T_RESULT_FILE) ];then\
+			cp $(POLICY_FILE) $(TMP_POLICY);\
+			echo "($(ADAPTER) $(SEED) $(TEST) $(PACMAN) $(NGHOSTS) $(GHOST) $(ARG_GHAGENT) $(POLICY) $(TMP_POLICY))";\
+			$(ADAPTER) $(SEED) $(TEST) $(PACMAN) $(NGHOSTS) $(GHOST) $(ARG_GHAGENT) $(POLICY) $(TMP_POLICY);\
+			mv results.txt $(T_RESULT_FILE);\
+			rm $(TMP_POLICY);\
+		fi;\
 	else\
 		echo "Missing policy file '$(POLICY_FILE)'";\
-	fi
+	fi;
 #test fixed ghosts with no learning phase
 test-fghost-%: stop controller
 	($(ADAPTER) $(SEED) $(TEST) $(PACMAN) --num-ghosts 2 $(GHOST) $*)
