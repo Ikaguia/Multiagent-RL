@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -* 
+
 import glob
 import sys
 import os
@@ -40,26 +42,37 @@ agents = sorted(set([i[0] for i in testRes]))
 nghosts = sorted(set([i[1] for i in testRes]))
 colors = 'bgrcmykw'
 
+npoints = None
+
 for nghost in nghosts:
 	for agentId in xrange(len(agents)):
 		agent = agents[agentId]
 		color = colors[agentId]
-		x,y = [],[]
+		x,y = [0],[0]
 		for result in sorted(testRes):
-			if result[:2] == (agent,nghost):
-				x += [float(result[2])]
-				y += [testRes[result][0]]
-		z = np.polyfit(x, y, len(x)-1)
-		# print x,y,z
-		p = np.poly1d(z)
-		s = np.linspace(0, x[-1] + 50, 100)
-		plt.plot(x, y, color+'.')
-		plt.plot(s, p(s), color+'--', label=agent)
+			_agent,_nghost,_pm,_nlearn = result
+			_testScore = testRes[result][0]
+			if (result[:2] == (agent,nghost)) and (int(_nlearn) > 10):
+				# print result
+				x += [float(_nlearn)]
+				y += [_testScore]
+		if len(x) == npoints or npoints == None:
+			npoints = len(x)
 
-		for lgames in (100, 150, 200, 250, 500, 1000):
-			print "estimated score for %s %s after %d learn games: %f" % (agent, nghost, lgames, p(lgames))
-	plt.xlabel('learn games')
-	plt.ylabel('average score in test games')
+			z = np.polyfit(x, y, 1)
+			# print x,y,z
+			p = np.poly1d(z)
+			s1 = np.linspace(0, 150, 1000)
+			s2 = np.linspace(150, 250, 1000)
+			# plt.plot(x, y, color+'.')
+			plt.plot(s1, p(s1), color+'-', label=agent)
+			plt.plot(s2, p(s2), color+'--', label='Previsao para ' + agent)
+
+			for lgames in (200, 225, 250):
+				print "estimated average score for %s %s after %d learn games: %f" % (agent, nghost, lgames, p(lgames))
+	plt.xlabel('Jogos de aprendizagem')
+	plt.ylabel('Pontuacao media nos jogos de teste')
 	plt.legend()
+	plt.ylim(-1000,5000)
 	plt.show()
 
