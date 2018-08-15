@@ -43,40 +43,19 @@ T_RESULT_FILE = $(RESULTS_PATH)/test-$(ARG_GHAGENT)_$(ARG_NGHOSTS)g_$(ARG_PMAGEN
 TMP_POLICY = $(POLICIES_PATH)/__temp
 
 all:
-	@for(( i=1; i<=5; ++i ))do\
-		a=ai;\
-		if [[ $$i -ne 1 ]]; then a=$$a$$i; fi;\
-		for(( j=2; j<=4; j++ ))do\
-			echo $(MAKE) learn-ghost ARG_GHAGENT=$$a ARG_NGHOSTS=$$j ARG_LSTEP=100 ARG_LSTEPS=1;\
-			$(MAKE) --no-print-directory learn-ghost ARG_GHAGENT=$$a ARG_NGHOSTS=$$j ARG_LSTEP=100 ARG_LSTEPS=1;\
-			echo $(MAKE) test-ghost ARG_GHAGENT=$$a ARG_NGHOSTS=$$j ARG_LSTEP=100 ARG_LSTEPS=1;\
-			$(MAKE) --no-print-directory test-ghost ARG_GHAGENT=$$a ARG_NGHOSTS=$$j ARG_LSTEP=100 ARG_LSTEPS=1;\
-		done;\
-	done
-
-learn-all:
-	@for(( i=1; i<=5; ++i ))do\
-		a=ai;\
-		if [[ $$i -ne 1 ]]; then a=$$a$$i; fi;\
-		for(( j=2; j<=4; j++ ))do\
-			echo $(MAKE) learn-ghost ARG_GHAGENT=$$a ARG_NGHOSTS=$$j ARG_LSTEP=100 ARG_LSTEPS=1;\
-			$(MAKE) --no-print-directory learn-ghost ARG_GHAGENT=$$a ARG_NGHOSTS=$$j ARG_LSTEP=100 ARG_LSTEPS=1;\
-		done;\
-	done
-
-test-all:
-	@for(( i=1; i<=5; ++i ))do\
-		a=ai;\
-		if [[ $$i -ne 1 ]]; then a=$$a$$i; fi;\
-		for(( j=2; j<=4; j++ ))do\
-			echo $(MAKE) test-ghost ARG_GHAGENT=$$a ARG_NGHOSTS=$$j ARG_LSTEP=100 ARG_LSTEPS=1;\
-			$(MAKE) --no-print-directory test-ghost ARG_GHAGENT=$$a ARG_NGHOSTS=$$j ARG_LSTEP=100 ARG_LSTEPS=1;\
+	@for(( j=2; j<=4; j++ ))do\
+		for(( i=1; i<=5; ++i ))do\
+			a=ai;\
+			if [[ $$i -ne 1 ]]; then a=$$a$$i; fi;\
+			echo "make learn-ghost ARG_GHAGENT=$$a ARG_NGHOSTS=$$j ARG_LSTEP=10 ARG_LSTEPS=15";\
+			"$(MAKE)" --no-print-directory learn-ghost ARG_GHAGENT=$$a ARG_NGHOSTS=$$j ARG_LSTEP=10 ARG_LSTEPS=15;\
+			echo "make test-ghost ARG_GHAGENT=$$a ARG_NGHOSTS=$$j ARG_LSTEP=10 ARG_LSTEPS=15 ARG_TGAMES=10";\
+			"$(MAKE)" --no-print-directory test-ghost ARG_GHAGENT=$$a ARG_NGHOSTS=$$j ARG_LSTEP=10 ARG_LSTEPS=15 ARG_TGAMES=10;\
 		done;\
 	done
 
 #rule to learn policies for ghosts
 learn-ghost:
-	@clear || cls
 	@rm -f $(TMP_POLICY)
 	@rm -f results.txt
 	@for(( i=1; i<=$(ARG_LSTEPS); ++i ))do\
@@ -90,13 +69,12 @@ learn-ghost:
 				echo "(cp $$p $(TMP_POLICY))";\
 				cp $$p $(TMP_POLICY);\
 			fi;\
-			$(MAKE) learn-policy $(ARGS) LGAMES=$$((( $$i * $(ARG_LSTEP) )));\
+			"$(MAKE)" learn-policy $(ARGS) LGAMES=$$((( $$i * $(ARG_LSTEP) )));\
 		fi;\
 		p=$$f;\
 	done
 	@rm -f $(TMP_POLICY)
 	@echo "#done"
-
 #rule to learn new policies for ghosts
 relearn-ghost:
 	@clear || cls
@@ -113,6 +91,25 @@ relearn-ghost:
 	done
 	@rm -f $(TMP_POLICY)
 	@echo "#done"
+#rule to test learnt policies for ghosts
+test-ghost:
+	@clear || cls
+	@rm -f $(TMP_POLICY)
+	@rm -f results.txt
+	@for(( i=1; i<$(ARG_LSTEPS); ++i ))do\
+		f=$(POLICIES_PATH)/$(ARG_GHAGENT)_$(ARG_NGHOSTS)g_$(ARG_PMAGENT)_$$((( $$i * $(ARG_LSTEP) )));\
+		g=$(RESULTS_PATH)/test-$(ARG_GHAGENT)_$(ARG_NGHOSTS)g_$(ARG_PMAGENT)_$$((( $$i * $(ARG_LSTEP) ))).txt;\
+		echo "#testing $$f";\
+		echo "#looking for $$g";\
+		if [ -e $$g ]; then\
+			echo "#found it";\
+		else\
+			echo "#didnt find it, testing instead";\
+			"$(MAKE)" test-policy $(ARGS) POLICY_FILE=$$f T_RESULT_FILE=$$g;\
+		fi;\
+	done
+	@rm -f $(TMP_POLICY)
+	@echo "#done"
 
 #rule to make policy files
 learn-policy: stop controller
@@ -120,15 +117,13 @@ learn-policy: stop controller
 	(cp $(TMP_POLICY) $(POLICY_FILE))
 	(mv results.txt $(L_RESULT_FILE))
 #test learned policies
-test-ghost: stop controller
+test-policy: stop controller
 	@if [ -e $(POLICY_FILE) ];then\
-		if [ -e $(T_RESULT_FILE) ];then\
-			cp $(POLICY_FILE) $(TMP_POLICY);\
-			echo "($(ADAPTER) $(SEED) $(TEST) $(PACMAN) $(NGHOSTS) $(GHOST) $(ARG_GHAGENT) $(POLICY) $(TMP_POLICY))";\
-			$(ADAPTER) $(SEED) $(TEST) $(PACMAN) $(NGHOSTS) $(GHOST) $(ARG_GHAGENT) $(POLICY) $(TMP_POLICY);\
-			mv results.txt $(T_RESULT_FILE);\
-			rm $(TMP_POLICY);\
-		fi;\
+		cp $(POLICY_FILE) $(TMP_POLICY);\
+		echo "($(ADAPTER) $(SEED) $(TEST) $(PACMAN) $(NGHOSTS) $(GHOST) $(ARG_GHAGENT) $(POLICY) $(TMP_POLICY))";\
+		$(ADAPTER) $(SEED) $(TEST) $(PACMAN) $(NGHOSTS) $(GHOST) $(ARG_GHAGENT) $(POLICY) $(TMP_POLICY);\
+		mv results.txt $(T_RESULT_FILE);\
+		rm $(TMP_POLICY);\
 	else\
 		echo "Missing policy file '$(POLICY_FILE)'";\
 	fi;
@@ -168,6 +163,25 @@ debug:
 	@echo $(POLICY_FILE)
 test: stop controller
 	($(ADAPTER) $(SEED) -l 1 -t 1 $(PACMAN) $(NGHOSTS) $(GHOST) $(ARG_GHAGENT))
+
+help:
+	@echo "all"
+	@echo "learn-all"
+	@echo "test-all"
+	@echo "learn-ghost"
+	@echo "relearn-ghost"
+	@echo "learn-policy"
+	@echo "test-ghost"
+	@echo "test-fghost"
+	@echo "debug"
+	@echo "Args are:"
+	@echo "	ARG_TGAMES	#number of test games"
+	@echo "	ARG_NGHOSTS	#number of ghosts"
+	@echo "	ARG_LSTEP	#each learn step is 50 learn games"
+	@echo "	ARG_LSTEPS	#4 learn steps, 200 learn games"
+	@echo "	ARG_SEED	#seed for random number generator"
+	@echo "	ARG_GHAGENT	#ghost agent"
+	@echo "	ARG_PMAGENT	#pacman agent"
 
 
 .PHONY: old-$(POLICIES_PATH)/% old-% stop controller

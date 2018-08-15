@@ -465,7 +465,7 @@ class Adapter(object):
 			filename: Name of the file.
 			content: content to be writen on the file.
 		"""
-		with open(filename, 'w') as f:
+		with open(filename, 'w+') as f:
 			f.write(pickle.dumps(content))
 
 	def run(self):
